@@ -357,6 +357,15 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
       <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Cantidad</th><th>Precio medio</th><th>Precio</th><th>Valor</th><th>Resultado</th></tr></thead><tbody id="dcaPos"></tbody></table></div>
     </section>
     <section class="card c12" data-p="dca">
+      <div class="ch"><h2>Altseason</h2><span class="r cnt" id="altF"></span></div>
+      <div id="alt" style="padding:4px 18px 18px"><div class="empty">Calculando con las 50 altcoins más negociadas…</div></div>
+    </section>
+    <section class="card c12" data-p="dca">
+      <div class="ch"><h2>Toma de beneficios</h2><span class="r cnt">objetivo: acabar con más monedas</span></div>
+      <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Precio</th><th>Euforia (× media 200d)</th><th>Venta 1 · 20%</th><th>Venta 2 · 20%</th><th>Venta 3 · 20%</th><th>Recompra</th><th>Estado</th></tr></thead><tbody id="tp"></tbody></table></div>
+      <div class="legend" style="flex-wrap:wrap"><span>Vende el 20% en cada objetivo (1,8× · 2,3× · 3× su media de 200 días) y recompra todo al volver a la media</span><span>Si sube +30% en un día (probable noticia) espera 24 h</span><span>Te avisa por Telegram · tú decides</span></div>
+    </section>
+    <section class="card c12" data-p="dca">
       <div class="ch"><h2>Radar ISO 20022</h2><span class="r cnt">zonas de compra por tramos · ~<span id="tramoEur">100</span> € por tramo</span></div>
       <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Precio</th><th>24h</th><th>7d</th><th>Desde máx. 1 año</th><th>Rango 3 años</th><th>RSI semanal</th><th>vs media 200d</th><th>60 días</th><th>Semáforo</th></tr></thead><tbody id="dcaWatch"></tbody></table></div>
       <div class="legend" style="flex-wrap:wrap"><span>Tramo 1: RSI semanal &lt; 40, o bajo la media de 200 días con caída &gt; 30%</span><span>Tramo 2: −15% desde el tramo 1</span><span>Tramo 3: −28%</span><span>La compra la decides tú</span></div>
@@ -531,7 +540,7 @@ function render(rapido){
   { const U=(P.avisos||[]).filter(a=>a.tipo!=="resumen").slice(-3).reverse();
     $("ultAv").innerHTML=U.length?`<div class="ch"><h2>Últimos avisos</h2><span class="r cnt">ver todos ›</span></div>`+U.map(a=>{const [t1]=a.texto.split("\n"); return `<div class="av" style="cursor:pointer"><div class="tx"><b style="font-weight:600">${t1}</b></div><div class="tm">${fecha(a.t)}</div></div>`}).join(""):"";
     $("ultAv").style.display=U.length?"":"none"; $("ultAv").style.cursor="pointer"; }
-  renderDca(); renderIA(); renderAvisos(); renderInforme(); semaforos(); herramientas();
+  renderDca(); renderIA(); renderAvisos(); renderInforme(); semaforos(); herramientas(); renderTP();
   $("gBot").innerHTML=f(eq)+' <span style="font-size:14px;color:var(--mute)">USDT</span>';
   $("gBotS").innerHTML=`<span class="${cls(eq-ini)}">${pc(eq/ini-1)}</span> <span class="mute">desde el inicio · ${ps.length} posiciones</span>`;
   const DI=(P.diario||[]).slice().reverse();
@@ -601,6 +610,7 @@ function dcaDetalle(w){
     CH2=lwcBase(el,320); CH2.applyOptions({width:el.clientWidth,timeScale:{timeVisible:false}});
     const cs=CH2.addCandlestickSeries({upColor:V("--up"),downColor:V("--down"),borderVisible:false,wickUpColor:V("--up"),wickDownColor:V("--down"),priceFormat:{type:"price",precision:w.px<1?5:2,minMove:w.px<1?0.00001:0.01}});
     cs.setData(w.velas.map(k=>({time:k[0],open:k[1],high:k[2],low:k[3],close:k[4]})));
+    const vv=ventaDe(w); if(vv) vv.obj.forEach((x,i)=>cs.createPriceLine({price:x,color:"#8B5CF6",lineStyle:1,lineWidth:1,axisLabelVisible:true,title:"venta "+(i+1)}));
     if(z.niveles){[["t1","tramo 1","#10B981"],["t2","tramo 2","#F59E0B"],["t3","tramo 3","#E5484D"]].forEach(([k,t,c])=>cs.createPriceLine({price:z.niveles[k],color:c,lineStyle:2,lineWidth:1,axisLabelVisible:true,title:t}));}
     CH2.timeScale().fitContent(); $("tfInfo").textContent="1 vela = 1 día · datos del bot"; });
 }
@@ -626,7 +636,7 @@ function semaforos(){
   const sis=edad<45?["g","Funcionando","último ciclo hace "+Math.round(edad)+" min"]:edad<120?["a","Con retraso","hace "+Math.round(edad)+" min"]:["r","Parado","sin ciclo hace "+(edad/60).toFixed(1)+" h"];
   const rf=P.research&&P.research.fecha, hoy=new Date().toISOString().slice(0,10), ay=new Date(Date.now()-864e5).toISOString().slice(0,10);
   const ana=rf?(rf>=ay?["g","Al día","análisis del "+rf]:["a","Atrasado","último: "+rf]):["n","Pendiente","primer análisis esta noche"];
-  const L=[["Mercado",merc],["Sentimiento",sent],["Riesgo posiciones",ries],["Oportunidades DCA",opo],["Sistema",sis],["Analista IA",ana]];
+  const L=[["Mercado",merc],["Sentimiento",sent],["Riesgo posiciones",ries],["Oportunidades DCA",opo],["Altseason",ALT?[ALT.idx>=75?"r":ALT.idx>=50?"a":ALT.idx>25?"n":"g",ALT.idx+" / 100",ALT.idx>=75?"vender en objetivos":ALT.idx>=50?"calentándose":"fase de acumular"]:["n","—","calculando"]],["Sistema",sis]];
   $("sem").innerHTML=L.map(([t,[c,v,d]])=>`<div class="sl"><div class="h">${luz(c)}${t}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
 }
 function spark(v){ if(!v||v.length<2) return ""; const c=v.slice(-60).map(k=>k[4]), mn=Math.min(...c), mx=Math.max(...c), W=110,H=30;
@@ -806,6 +816,7 @@ $("q").onkeydown=e=>{ if(e.key==="Enter"){ const d=$("qres").querySelector("div[
 function verCripto(s){
   const pos=(P.posiciones||[]).find(p=>p.s===s); if(pos) return detalle(pos);
   const w=(P.dca&&P.dca.watch||[]).find(x=>x.s===s);
+  if(w&&w.velas) return dcaDetalle(w);
   const m=MK.find(x=>x.s===s)||{s,px:w?w.px:0};
   $("sheet").hidden=false; favPintar(s);
   $("dSym").innerHTML=`${logo(s)}${base(s)}<span class="dim" style="font-size:13px">/USDT</span>${w?' <span class="tag">Radar DCA</span>':''}`;
@@ -814,6 +825,39 @@ function verCripto(s){
   $("dDl").innerHTML=[["Precio",px(m.px)],["Máx. 24h",px(m.hi)],["Mín. 24h",px(m.lo)],["Ranking del bot",r>=0?"#"+(r+1):"fuera"]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
   requestAnimationFrame(()=>velas({s,px:m.px}));
 }
+/* ---------- toma de beneficios y altseason ---------- */
+const NIV=[1.8,2.3,3.0];
+function ventaDe(w){ if(w.vs_ma200==null) return null; const ma=w.px/(1+w.vs_ma200), my=1+w.vs_ma200, v=w.venta||{};
+  return {ma, my, obj:NIV.map(n=>ma*n), nivel:v.nivel??NIV.filter(n=>my>=n).length, noticia:(w.ch24h||0)>=0.30}; }
+function renderTP(){ const W=(P.dca&&P.dca.watch)||[];
+  $("tp").innerHTML=W.map(w=>{ const v=ventaDe(w); if(!v) return "";
+    const pct=Math.max(0,Math.min(1,(v.my-0.5)/2.5)), col=v.my>=1.8?"var(--down)":v.my>=1.4?"#F59E0B":"var(--up)";
+    const est=v.noticia&&v.my>=1.8?["a","Esperar 24 h (posible noticia)"]:v.nivel>=3?["r","Vende 3/3"]:v.nivel==2?["r","Vende 2/3"]:v.nivel==1?["r","Vende 1/3"]:v.my>=1.5?["a","Calentándose"]:v.my<=1?["g","Acumular"]:["n","Mantener"];
+    const ob=(x,i)=>`<td data-l="Venta ${i+1}">${px(x)}<br><span class="${v.nivel>i?"down":"dim"}" style="font-size:12px">${v.nivel>i?"✓ alcanzado":pc(x/w.px-1,0)}</span></td>`;
+    return `<tr class="clk" data-s="${w.s}"><td data-l="Activo">${logo(w.s)}<span class="pair">${base(w.s)}</span></td><td data-l="Precio">${px(w.px)}</td>
+      <td data-l="Euforia"><b>${f(v.my,2)}×</b><div style="height:6px;border-radius:9px;background:var(--line);margin-top:5px;min-width:90px;position:relative">
+        <div style="width:${pct*100}%;height:100%;border-radius:9px;background:${col}"></div>${NIV.map(n=>`<i style="position:absolute;top:-2px;left:${(n-0.5)/2.5*100}%;width:2px;height:10px;background:var(--mute)"></i>`).join("")}</div></td>
+      ${v.obj.map(ob).join("")}<td data-l="Recompra">${px(v.ma)}</td><td data-l="Estado"><span class="sem-cell">${luz(est[0])}${est[1]}</span></td></tr>`}).join(""); }
+let ALT=null;
+async function cargarAlt(){
+  try{ const c=JSON.parse(localStorage.getItem("alt")||"null"); if(c&&Date.now()-c.t<6*3600e3){ALT=c; return pintarAlt();} }catch(e){}
+  if(!MK.length){ setTimeout(cargarAlt,3000); return; }
+  const st=/^(USDC|FDUSD|TUSD|BUSD|DAI|USDP|EUR|AEUR|USD1|PAXG|WBTC|WBETH|BTC|ETH)\//;
+  const L=MK.filter(m=>!st.test(m.s)).sort((a,b)=>b.vol-a.vol).slice(0,50);
+  const r90=async s=>{ const r=await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${s.replace("/","")}&interval=1d&limit=91`); const k=await r.json(); return k.length>=91?k.at(-1)[4]/k[0][4]-1:null; };
+  try{ const btc=await r90("BTC/USDT"); const R=(await Promise.all(L.map(m=>r90(m.s).catch(()=>null)))).filter(x=>x!=null);
+    let dom=null; try{ const g=await (await fetch("https://api.coingecko.com/api/v3/global")).json(); dom=g.data.market_cap_percentage.btc/100; }catch(e){}
+    ALT={t:Date.now(), idx:Math.round(R.filter(x=>x>btc).length/R.length*100), n:R.length, btc, dom};
+    try{localStorage.setItem("alt",JSON.stringify(ALT))}catch(e){} pintarAlt(); }catch(e){ $("alt").innerHTML='<div class="empty">No se pudo calcular ahora.</div>'; } }
+function pintarAlt(){ if(!ALT) return; const i=ALT.idx;
+  const [c,t,d]=i>=75?["r","ALTSEASON","Las altcoins baten a BTC con fuerza. Momento de ejecutar objetivos de venta (si no son por noticias)."]:i>=50?["a","Calentándose","Más de la mitad de las altcoins baten a BTC. Prepara tus objetivos de venta."]:i>25?["n","Neutral","Sin dominio claro. Mantén y acumula en caídas."]:["g","Temporada de Bitcoin","Las altcoins van peor que BTC. Fase de acumular, no de vender."];
+  $("altF").textContent="actualizado "+new Date(ALT.t).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
+  $("alt").innerHTML=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${luz(c)}<b style="font-size:28px">${i}</b><span style="font-size:13px" class="mute">/ 100</span><b style="font-size:16px">${t}</b></div>
+    <div style="position:relative;height:10px;border-radius:9px;margin:14px 0 6px;background:linear-gradient(90deg,#10B981 0%,#CBD2DE 25% 50%,#F59E0B 62%,#E5484D 100%)"><i style="position:absolute;left:calc(${i}% - 7px);top:-4px;width:14px;height:18px;border-radius:5px;background:var(--fg);border:2px solid var(--panel)"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:11.5px" class="dim"><span>Temporada BTC</span><span>25</span><span>50</span><span>75</span><span>Altseason</span></div>
+    <p style="margin:12px 0 0;line-height:1.5">${d}</p>
+    <p class="dim" style="font-size:12px;margin:6px 0 0">${ALT.n} altcoins más negociadas que suben más que BTC en 90 días (BTC ${pc(ALT.btc,0)}).${ALT.dom?` Dominancia de BTC: ${f(ALT.dom*100,1)}%.`:""}</p>`;
+  if(P) semaforos(); }
 /* ---------- precios en tiempo real (flujo público de Binance) ---------- */
 let ws=null, wsKey="", vivo={}, ultimoRender=0, pend=false;
 function conectarVivo(){
@@ -859,7 +903,7 @@ addEventListener("resize",()=>{if(P){diario();}});
 function cuenta(){const n=new Date(), next=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1,0,7), d=Math.max(0,next-n.getTime())/1000;
   $("cd").textContent=String(Math.floor(d/3600)).padStart(2,"0")+":"+String(Math.floor(d%3600/60)).padStart(2,"0")+":"+String(Math.floor(d%60)).padStart(2,"0");}
 setInterval(cuenta,1000); cuenta();
-cargar(); setInterval(cargar,60000); cargarFNG(); setInterval(cargarFNG,3600000); cargarMercado(); setInterval(cargarMercado,60000);
+cargar(); setInterval(cargar,60000); cargarFNG(); setInterval(cargarFNG,3600000); cargarMercado(); setInterval(cargarMercado,60000); cargarAlt(); setInterval(cargarAlt,3600e3);
 $("tema").onclick=()=>{ const t=document.documentElement.dataset.theme==="dark"?"light":"dark"; document.documentElement.dataset.theme=t; try{localStorage.setItem("tema",t)}catch(e){}
   document.querySelector('meta[name=theme-color]').content=t==="dark"?"#0B1020":"#F5F7FB"; if(P){ render(); } if(!$("sheet").hidden&&PSEL) velas(PSEL); };
 </script>
