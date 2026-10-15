@@ -215,7 +215,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
   <div data-p="resumen" class="show">
     <div class="two">
       <div class="pc" data-go="bot"><div class="k">Bot de trading <span class="pill paper" style="font-size:10.5px">Simulación</span></div><div class="v" id="gBot">—</div><div class="s" id="gBotS">—</div></div>
-      <div class="pc" data-go="dca"><div class="k">Cartera DCA ISO 20022 <span class="pill live" style="font-size:10.5px">Real</span></div><div class="v" id="gDca">—</div><div class="s" id="gDcaS">—</div></div>
+      <div class="pc" data-go="dca"><div class="k">Cartera DCA ISO 20022 <span class="pill live" style="font-size:10.5px">Tus XRP</span></div><div class="v" id="gDca">—</div><div class="s" id="gDcaS">—</div></div>
     </div>
     <div class="hero">
       <div><div class="lbl">Bot de trading · valor</div><div class="big num" id="bal">—</div></div>
@@ -274,6 +274,12 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     <section class="card c12" data-p="ia">
       <div class="ch"><h2>Razonamiento del bot</h2><span class="r cnt" id="rT"></span></div>
       <div class="con" id="con"></div>
+    </section>
+    <section class="card c12" data-p="dca">
+      <div class="ch"><h2>DCA automático</h2><span class="r"><span class="pill paper" id="autoModo">Simulación</span></span></div>
+      <div class="stats" id="autoStats" style="padding:0 18px 4px;margin-top:0"></div>
+      <div class="tw"><table class="cards"><thead><tr><th>Fecha</th><th>Activo</th><th>Tramo</th><th>Cantidad</th><th>Precio</th><th>Importe</th></tr></thead><tbody id="autoCompras"></tbody></table></div>
+      <div class="legend" style="flex-wrap:wrap"><span>Cada mes entran <b id="autoAporte">300</b> € en la caja DCA · compra ~1/3 cuando un activo entra en un tramo · si no hay caídas, el dinero espera</span></div>
     </section>
     <section class="card c12" data-p="dca">
       <div class="ch"><h2>Mi cartera DCA</h2><span class="r cnt" id="dcaTot"></span></div>
@@ -465,6 +471,17 @@ function renderDca(){
     <td data-l="vs media 200d" class="${w.vs_ma200==null?"dim":cls(w.vs_ma200)}">${w.vs_ma200==null?"—":pc(w.vs_ma200,0)}</td>
     <td data-l="Estado"><span class="est ${e}">${w.estado}</span>${nv}</td></tr>`}).join("");
   document.querySelectorAll("#dcaWatch tr.click").forEach(r=>r.onclick=()=>dcaDetalle(D.watch[r.dataset.dca]));
+  const A=D.auto;
+  if(A&&A.modo!=="off"){
+    $("autoModo").textContent=A.modo==="live"?"Dinero real":"Simulación"; $("autoModo").className="pill "+(A.modo==="live"?"live":"paper");
+    $("autoAporte").textContent=A.aporte_mes_eur||300;
+    const r=A.aportado?A.total/A.aportado-1:0;
+    $("autoStats").innerHTML=[["Aportado",f(A.aportado)+" $",""],["Caja disponible",f(A.caja)+" $","esperando caídas"],["Invertido (valor)",f(A.valor_posiciones)+" $",(A.posiciones||[]).map(x=>x.activo).join(", ")||"—"],
+      ["Total",f(A.total)+" $",`<span class="${cls(r)}">${pc(r)}</span> sobre lo aportado`]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b><em>${x[2]}</em></div>`).join("");
+    const AC=(A.compras||[]).slice().reverse();
+    $("autoCompras").innerHTML=AC.length?AC.map(c=>`<tr><td>${c.fecha}</td><td data-l="Activo"><span class="pair">${c.activo}</span></td><td data-l="Tramo">${c.tramo}/3</td>
+      <td data-l="Cantidad">${f(c.cantidad,2)}</td><td data-l="Precio">${px(c.precio_usd)}</td><td data-l="Importe">${f(c.usd)} $</td></tr>`).join(""):`<tr><td colspan="6" class="empty">Sin compras todavía: el bot compra cuando un activo entra en un tramo.</td></tr>`;
+  }
   const C=(D.compras||[]).slice().reverse();
   $("dcaCompras").innerHTML=C.length?C.map(c=>`<tr><td>${c.fecha}</td><td data-l="Activo"><span class="pair">${c.activo}</span></td><td data-l="Cantidad">${f(c.cantidad,2)}</td>
     <td data-l="Precio (USD)">${c.precio_usd?px(c.precio_usd):'<span class="dim">—</span>'}</td><td class="why">${c.nota||""}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">Sin compras registradas.</td></tr>`;
