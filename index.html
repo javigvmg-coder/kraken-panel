@@ -142,7 +142,32 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 .tab.on{color:var(--amber);background:var(--accent-soft)}
 .tab.on svg{stroke:var(--amber2)}
 @media (min-width:1000px){nav{display:none}}
-@media (max-width:999px){[data-p]:not(.show){display:none!important}}
+[data-p]:not(.show){display:none!important}
+.seg{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:12px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;color:var(--mute);cursor:pointer}
+.seg button.on{background:var(--panel);color:var(--fg);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+@media (max-width:999px){.seg{display:none}}
+.rbar{display:inline-block;width:80px;height:6px;border-radius:999px;background:linear-gradient(90deg,#10B981,#F59E0B,#E5484D);position:relative;vertical-align:middle;margin-left:6px}
+.rbar i{position:absolute;top:-3px;width:3px;height:12px;border-radius:2px;background:var(--fg)}
+.est{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.est.t{background:#E3F7EE;color:var(--up)} .est.o{background:#FFF4DC;color:#9A6408} .est.w{background:var(--panel2);color:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.pc{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);cursor:pointer}
+.pc .k{color:var(--mute);font-size:12.5px;font-weight:600;display:flex;gap:8px;align-items:center}
+.pc .v{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.pc .s{font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
+.ra{padding:14px 18px;border-top:1px solid var(--line)}
+.ra h3{margin:0 0 8px;font-size:15px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ra .hz{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){.ra .hz{grid-template-columns:1fr}}
+.ra .hz>div{background:var(--bg2);border-radius:12px;padding:10px 12px;font-size:13.5px;color:var(--mute);line-height:1.55}
+.ra .hz b{color:var(--fg)}
+.vis{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;margin-left:6px}
+.vis.al{background:#E3F7EE;color:var(--up)} .vis.ba{background:#FDECEC;color:var(--down)} .vis.ne{background:var(--panel2);color:var(--mute)}
+.best{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 18px 14px}
+@media (max-width:640px){.best{grid-template-columns:1fr}}
+.best>div{border-radius:14px;padding:14px;background:linear-gradient(135deg,#F2F6FF,#EEF8F4);border:1px solid var(--line)}
 @media (max-width:640px){
   .wrap{padding:0 14px}
   .hero{padding:18px;gap:16px;border-radius:20px}
@@ -180,6 +205,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 <div class="wrap">
   <header class="bar">
     <div class="brand"><div class="logo"><i></i></div><div><h1>Kraken Bot</h1><small>Trading automático · KuCoin</small></div></div>
+    <div class="seg" id="seg"><button class="on" data-t="resumen">Resumen</button><button data-t="bot">Bot</button><button data-t="dca">Cartera DCA</button><button data-t="ia">Analista IA</button></div>
     <span class="status" id="st"><span class="dot"></span>—</span>
     <span id="pMode" class="pill paper">Simulación</span><span id="pReg" class="pill">—</span>
   </header>
@@ -187,8 +213,12 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
   <div id="err" class="err" hidden></div>
 
   <div data-p="resumen" class="show">
+    <div class="two">
+      <div class="pc" data-go="bot"><div class="k">Bot de trading <span class="pill paper" style="font-size:10.5px">Simulación</span></div><div class="v" id="gBot">—</div><div class="s" id="gBotS">—</div></div>
+      <div class="pc" data-go="dca"><div class="k">Cartera DCA ISO 20022 <span class="pill live" style="font-size:10.5px">Real</span></div><div class="v" id="gDca">—</div><div class="s" id="gDcaS">—</div></div>
+    </div>
     <div class="hero">
-      <div><div class="lbl">Valor total</div><div class="big num" id="bal">—</div></div>
+      <div><div class="lbl">Bot de trading · valor</div><div class="big num" id="bal">—</div></div>
       <div><div class="lbl">Desde el inicio</div><div class="chg" id="pnl">—</div></div>
       <div><div class="lbl">BTC mismo periodo</div><div class="chg" id="btcp">—</div></div>
       <div><div class="lbl">Próxima decisión</div><div class="cd" id="cd">—</div></div>
@@ -219,31 +249,49 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
       <div class="kv" id="kv"></div>
     </section>
 
-    <section class="card c8" data-p="ops">
+    <section class="card c8" data-p="bot">
       <div class="ch"><h2>Operaciones cerradas</h2><span class="r cnt" id="cN"></span></div>
       <div class="tw scroll"><table class="cards"><thead><tr><th>Par</th><th>Entrada</th><th>Salida</th><th>Beneficio</th><th>USDT</th><th>Duración</th><th>Cierre</th><th>Motivo</th></tr></thead><tbody id="closed"></tbody></table></div>
     </section>
-    <section class="card c4" data-p="ops">
+    <section class="card c4" data-p="bot">
       <div class="ch"><h2>Rendimiento por cripto</h2></div>
       <div class="tw"><table><thead><tr><th>Par</th><th>Ops</th><th>Acierto</th><th>Beneficio</th></tr></thead><tbody id="perf"></tbody></table></div>
     </section>
 
-    <section class="card c6" data-p="mercado">
+    <section class="card c6" data-p="bot">
       <div class="ch"><h2>Ranking de fuerza</h2><span class="r cnt" id="uN"></span></div>
       <div class="tw scroll"><table><thead><tr><th>#</th><th style="text-align:left">Par</th><th>Fuerza</th><th>vs BTC (z)</th><th>Precio</th></tr></thead><tbody id="rk"></tbody></table></div>
     </section>
-    <section class="card c6" data-p="ops">
+    <section class="card c6" data-p="bot">
       <div class="ch"><h2>Registro de órdenes</h2><span class="r cnt" id="lN"></span></div>
       <div class="tw scroll"><table class="cards"><thead><tr><th>Fecha</th><th>Lado</th><th>Par</th><th>Precio</th><th>Motivo</th></tr></thead><tbody id="log"></tbody></table></div>
     </section>
 
-    <section class="card c12" data-p="bot">
-      <div class="ch"><h2>Diario de decisiones</h2><span class="r cnt">qué analizó, qué propuso, qué se vetó y por qué · incluye los días sin operar</span></div>
+    <section class="card c12" data-p="ia">
+      <div class="ch"><h2>Diario de decisiones del bot</h2><span class="r cnt">qué analizó, qué propuso, qué se vetó y por qué · incluye los días sin operar</span></div>
       <div id="diario"></div>
     </section>
-    <section class="card c12" data-p="bot">
+    <section class="card c12" data-p="ia">
       <div class="ch"><h2>Razonamiento del bot</h2><span class="r cnt" id="rT"></span></div>
       <div class="con" id="con"></div>
+    </section>
+    <section class="card c12" data-p="dca">
+      <div class="ch"><h2>Mi cartera DCA</h2><span class="r cnt" id="dcaTot"></span></div>
+      <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Cantidad</th><th>Precio medio</th><th>Precio</th><th>Valor</th><th>Resultado</th></tr></thead><tbody id="dcaPos"></tbody></table></div>
+    </section>
+    <section class="card c12" data-p="dca">
+      <div class="ch"><h2>Radar ISO 20022</h2><span class="r cnt">zonas de compra por tramos · ~<span id="tramoEur">100</span> € por tramo</span></div>
+      <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Precio</th><th>24h</th><th>7d</th><th>Desde máx. 1 año</th><th>Rango 3 años</th><th>RSI semanal</th><th>vs media 200d</th><th>Estado</th></tr></thead><tbody id="dcaWatch"></tbody></table></div>
+      <div class="legend" style="flex-wrap:wrap"><span>Tramo 1: RSI semanal &lt; 40, o bajo la media de 200 días con caída &gt; 30%</span><span>Tramo 2: −15% desde el tramo 1</span><span>Tramo 3: −28%</span><span>La compra la decides tú</span></div>
+    </section>
+    <section class="card c12" data-p="dca">
+      <div class="ch"><h2>Compras registradas</h2><span class="r cnt">dime tus compras y las apunto</span></div>
+      <div class="tw"><table class="cards"><thead><tr><th>Fecha</th><th>Activo</th><th>Cantidad</th><th>Precio (USD)</th><th>Nota</th></tr></thead><tbody id="dcaCompras"></tbody></table></div>
+    </section>
+
+    <section class="card c12" data-p="ia">
+      <div class="ch"><h2>Visión del analista IA</h2><span class="r cnt" id="resT"></span></div>
+      <div id="res"></div>
     </section>
   </div>
   <p class="foot" id="foot">Cargando…</p>
@@ -251,20 +299,20 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 
 <nav><div class="in">
   <button class="tab on" data-t="resumen"><svg viewBox="0 0 24 24"><path d="M3 12l9-8 9 8v8H3z"/></svg>Resumen</button>
-  <button class="tab" data-t="ops"><svg viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>Operaciones</button>
-  <button class="tab" data-t="mercado"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Mercado</button>
-  <button class="tab" data-t="bot"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Bot</button>
+  <button class="tab" data-t="bot"><svg viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>Bot</button>
+  <button class="tab" data-t="dca"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 10l7-7 7 7"/><path d="M4 21h16"/></svg>DCA</button>
+  <button class="tab" data-t="ia"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Analista</button>
 </div></nav>
 
 <div class="sheet" id="sheet" hidden><div class="in">
   <div class="grab"></div><button class="close" id="close">Cerrar</button>
   <div class="pair" style="font-family:var(--display);font-size:20px;font-weight:600" id="dSym"></div><div class="mono mute" id="dSub"></div>
   <div class="dl" id="dDl"></div>
-  <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px"><span class="mute" style="font-size:12px;font-weight:600;margin-right:4px">Velas</span>
+  <div id="tfRow" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px"><span class="mute" style="font-size:12px;font-weight:600;margin-right:4px">Velas</span>
     <button class="chip" data-tf="1m">1m</button><button class="chip" data-tf="15m">15m</button><button class="chip" data-tf="1h">1h</button><button class="chip" data-tf="4h">4h</button><button class="chip on" data-tf="1d">1D</button><button class="chip" data-tf="1w">1W</button>
     <span class="dim" id="tfInfo" style="font-size:12px;margin-left:auto"></span></div>
   <div id="cv2" class="lwc" style="height:320px"></div>
-  <div class="legend"><span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span></div>
+  <div class="legend" id="sheetLeg"><span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span></div>
 </div></div>
 
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
@@ -374,6 +422,9 @@ function render(rapido){
     ["Liquidez",f(P.cash)+" USDT"],["Capital inicial",f(ini)+" USDT"],["Stop por posición","3×ATR o −15%"],["Último ciclo",fecha(P.t)]];
   $("kv").innerHTML=KV.map(k=>`<span>${k[0]}</span><b>${k[1]}</b>`).join("");
   $("rT").textContent=fecha(P.t);
+  renderDca(); renderIA();
+  $("gBot").innerHTML=f(eq)+' <span style="font-size:14px;color:var(--mute)">USDT</span>';
+  $("gBotS").innerHTML=`<span class="${cls(eq-ini)}">${pc(eq/ini-1)}</span> <span class="mute">desde el inicio · ${ps.length} posiciones</span>`;
   const DI=(P.diario||[]).slice().reverse();
   $("diario").innerHTML=DI.length?DI.map(d=>{const ej=(d.ejecutadas||[]);
     return `<div class="dia"><h3>${d.dia} <span class="pill ${d.regimen?"bull":"bear"}">${d.regimen?"ALCISTA":"BAJISTA"}</span>${d.pausa?'<span class="pill paper">PAUSA</span>':''}<span class="mono dim" style="font-size:11px;font-weight:400">cartera ${f(d.equity)} USDT</span></h3>
@@ -393,6 +444,58 @@ function ejes(g,W,Hh,L,R,T,B,mn,mx,fmt){
 function prep(id,Hh){const cv=$(id),dpr=devicePixelRatio||1,W=cv.clientWidth; cv.width=W*dpr; cv.height=Hh*dpr; const g=cv.getContext("2d"); g.scale(dpr,dpr); return [g,W];}
 function vacio(g,t){g.fillStyle=V("--mute");g.font="12px "+V("--mono");g.textBaseline="top";g.fillText(t,12,16);}
 
+function renderDca(){
+  const D=P.dca; if(!D){ $("gDca").textContent="—"; $("gDcaS").textContent="Esperando el primer ciclo con el módulo DCA"; return; }
+  $("tramoEur").textContent=Math.round(D.tramo_eur||100);
+  const tot=(D.posiciones||[]).reduce((a,x)=>a+(x.valor||0),0);
+  $("gDca").innerHTML=f(tot)+' <span style="font-size:14px;color:var(--mute)">USD</span>';
+  const zonas=(D.watch||[]).filter(w=>w.zona&&w.zona.ref).map(w=>base(w.s));
+  $("gDcaS").innerHTML=zonas.length?`<span class="up">En zona de compra: ${zonas.join(", ")}</span>`:`<span class="mute">Ningún activo en zona de compra</span>`;
+  $("dcaTot").textContent="Valor total "+f(tot)+" USD";
+  $("dcaPos").innerHTML=(D.posiciones||[]).length?D.posiciones.map(x=>`<tr><td><span class="pair">${base(x.s)}</span></td><td data-l="Cantidad">${f(x.cantidad,2)}</td>
+    <td data-l="Precio medio">${x.precio_medio?px(x.precio_medio):'<span class="dim">pendiente</span>'}</td><td data-l="Precio">${px(x.px)}</td><td data-l="Valor">${f(x.valor)} $</td>
+    <td data-l="Resultado" class="${x.pnl_pct==null?"dim":cls(x.pnl_pct)}">${x.pnl_pct==null?"—":pc(x.pnl_pct)}</td></tr>`).join(""):`<tr><td colspan="6" class="empty">Sin compras registradas.</td></tr>`;
+  $("dcaWatch").innerHTML=(D.watch||[]).map((w,i)=>{const z=w.zona||{}, e=z.ref?"t":w.estado==="En oferta"?"o":"w";
+    const nv=z.niveles?`<div class="dim" style="font-size:11.5px;margin-top:4px">T1 ${px(z.niveles.t1)} · T2 ${px(z.niveles.t2)} · T3 ${px(z.niveles.t3)}</div>`:"";
+    return `<tr class="click" data-dca="${i}"><td><span class="pair">${base(w.s)}</span></td><td data-l="Precio">${px(w.px)}</td>
+    <td data-l="24h" class="${cls(w.ch24h)}">${pc(w.ch24h,1)}</td><td data-l="7d" class="${cls(w.ch7d)}">${pc(w.ch7d,1)}</td>
+    <td data-l="Desde máx. 1 año" class="${w.caida_1a<-.3?"down":""}">${pc(w.caida_1a,0)}</td>
+    <td data-l="Rango 3 años">${f(w.rango_3a*100,0)}%<span class="rbar"><i style="left:${Math.max(0,Math.min(100,w.rango_3a*100))}%"></i></span></td>
+    <td data-l="RSI semanal" class="${w.rsi_sem<40?"up":w.rsi_sem>70?"down":""}">${f(w.rsi_sem,0)}</td>
+    <td data-l="vs media 200d" class="${w.vs_ma200==null?"dim":cls(w.vs_ma200)}">${w.vs_ma200==null?"—":pc(w.vs_ma200,0)}</td>
+    <td data-l="Estado"><span class="est ${e}">${w.estado}</span>${nv}</td></tr>`}).join("");
+  document.querySelectorAll("#dcaWatch tr.click").forEach(r=>r.onclick=()=>dcaDetalle(D.watch[r.dataset.dca]));
+  const C=(D.compras||[]).slice().reverse();
+  $("dcaCompras").innerHTML=C.length?C.map(c=>`<tr><td>${c.fecha}</td><td data-l="Activo"><span class="pair">${c.activo}</span></td><td data-l="Cantidad">${f(c.cantidad,2)}</td>
+    <td data-l="Precio (USD)">${c.precio_usd?px(c.precio_usd):'<span class="dim">—</span>'}</td><td class="why">${c.nota||""}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">Sin compras registradas.</td></tr>`;
+}
+function dcaDetalle(w){
+  const z=w.zona||{}; PSEL=null; $("tfRow").style.display="none";
+  $("sheetLeg").innerHTML=z.niveles?'<span><i style="background:#10B981"></i>Tramo 1</span><span><i style="background:#F59E0B"></i>Tramo 2 (−15%)</span><span><i style="background:#E5484D"></i>Tramo 3 (−28%)</span>':'<span>Velas diarias · sin zona de compra activa</span>';
+  $("sheet").hidden=false;
+  $("dSym").innerHTML=`${base(w.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">DCA largo plazo</span>`;
+  $("dSub").innerHTML=`${pc(w.caida_1a,0)} desde máximo de 1 año · RSI semanal ${f(w.rsi_sem,0)} · ${w.estado}`;
+  $("dDl").innerHTML=[["Precio",px(w.px)],["Tramo 1",z.niveles?px(z.niveles.t1):"—"],["Tramo 2",z.niveles?px(z.niveles.t2):"—"],["Tramo 3",z.niveles?px(z.niveles.t3):"—"],["24h",pc(w.ch24h,1)],["vs media 200d",w.vs_ma200==null?"—":pc(w.vs_ma200,0)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
+  requestAnimationFrame(()=>{ const el=$("cv2"); if(CH2){CH2.remove();CH2=null;} el.innerHTML=""; if(!window.LightweightCharts||!w.velas) return;
+    CH2=lwcBase(el,320); CH2.applyOptions({width:el.clientWidth,timeScale:{timeVisible:false}});
+    const cs=CH2.addCandlestickSeries({upColor:V("--up"),downColor:V("--down"),borderVisible:false,wickUpColor:V("--up"),wickDownColor:V("--down"),priceFormat:{type:"price",precision:w.px<1?5:2,minMove:w.px<1?0.00001:0.01}});
+    cs.setData(w.velas.map(k=>({time:k[0],open:k[1],high:k[2],low:k[3],close:k[4]})));
+    if(z.niveles){[["t1","tramo 1","#10B981"],["t2","tramo 2","#F59E0B"],["t3","tramo 3","#E5484D"]].forEach(([k,t,c])=>cs.createPriceLine({price:z.niveles[k],color:c,lineStyle:2,lineWidth:1,axisLabelVisible:true,title:t}));}
+    CH2.timeScale().fitContent(); $("tfInfo").textContent="1 vela = 1 día · datos del bot"; });
+}
+function renderIA(){
+  const R=P.research;
+  if(!R||!R.activos){ $("res").innerHTML=`<div class="empty">El analista IA publicará aquí su primera visión esta noche (análisis de noticias de tus activos DCA y de los candidatos del bot, a corto y largo plazo).</div>`; $("resT").textContent=""; return; }
+  $("resT").textContent="Actualizado "+(R.fecha||"");
+  const v=x=>({alcista:"al",bajista:"ba"})[x]||"ne";
+  const best=(R.mejor_corto||R.mejor_largo)?`<div class="best"><div><div class="mute" style="font-size:12px;font-weight:600">Mejor oportunidad a corto plazo</div><div style="font-size:18px;font-weight:700;margin:4px 0">${R.mejor_corto?.activo||"—"}</div><div class="mute" style="font-size:13px">${R.mejor_corto?.motivo||""}</div></div>
+    <div><div class="mute" style="font-size:12px;font-weight:600">Mejor proyecto a largo plazo</div><div style="font-size:18px;font-weight:700;margin:4px 0">${R.mejor_largo?.activo||"—"}</div><div class="mute" style="font-size:13px">${R.mejor_largo?.motivo||""}</div></div></div>`:"";
+  $("res").innerHTML=(R.mercado?`<div class="con" style="max-height:none;color:var(--fg)">${R.mercado}</div>`:"")+best+Object.entries(R.activos).map(([s,a])=>`<div class="ra"><h3>${base(s)}
+    ${a.corto?`<span class="vis ${v(a.corto.vision)}">corto: ${a.corto.vision}</span>`:""}${a.largo?`<span class="vis ${v(a.largo.vision)}">largo: ${a.largo.vision}</span>`:""}</h3>
+    <div class="hz"><div><b>Corto plazo.</b> ${a.corto?.tesis||"—"}</div><div><b>Largo plazo.</b> ${a.largo?.tesis||"—"}</div></div>
+    ${a.invalidacion?`<div class="mute" style="font-size:12.5px;margin-top:8px"><b style="color:var(--fg)">Qué lo invalidaría:</b> ${a.invalidacion}</div>`:""}
+    ${(a.fuentes||[]).length?`<div class="dim" style="font-size:12px;margin-top:4px">Fuentes: ${a.fuentes.join(" · ")}</div>`:""}</div>`).join("");
+}
 let CH=null,sBot=null,sBtc=null;
 function lwcBase(el,h){
   return LightweightCharts.createChart(el,{height:h,layout:{background:{type:"solid",color:"transparent"},textColor:V("--dim"),fontFamily:"Inter, system-ui, sans-serif",fontSize:11},
@@ -446,7 +549,7 @@ async function velasTF(p){
   catch(e){ $("tfInfo").textContent=(TF==="1d"?"1 vela = 1 día · datos del bot":"Sin velas de "+NOM[TF]+" para esta cripto; muestro 1D"); return (P.velas||{})[p.s]||[]; }
 }
 async function velas(p){
-  PSEL=p; const el=$("cv2"); if(CH2){CH2.remove();CH2=null;}
+  PSEL=p; $("tfRow").style.display="flex"; $("sheetLeg").innerHTML='<span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span>'; const el=$("cv2"); if(CH2){CH2.remove();CH2=null;}
   const K=await velasTF(p);
   if(!window.LightweightCharts||!K.length){ el.innerHTML='<div class="empty">Sin velas disponibles todavía.</div>'; return; }
   el.innerHTML=""; CH2=lwcBase(el,320); CH2.applyOptions({width:el.clientWidth,timeScale:{timeVisible:!["1d","1w"].includes(TF),secondsVisible:false}});
@@ -490,11 +593,15 @@ document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf
 setInterval(()=>{ if(!$("sheet").hidden && PSEL && ["1m","15m"].includes(TF)) velas(PSEL); }, 30000);
 $("close").onclick=()=>$("sheet").hidden=true;
 $("sheet").onclick=e=>{if(e.target.id==="sheet")$("sheet").hidden=true};
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
-  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));
-  document.querySelectorAll("[data-p]").forEach(el=>el.classList.toggle("show",el.dataset.p===b.dataset.t));
-  scrollTo(0,0); if(P){curva(); diario();}
-});
+function ir(t){
+  document.querySelectorAll(".tab,.seg button").forEach(x=>x.classList.toggle("on",x.dataset.t===t));
+  document.querySelectorAll("[data-p]").forEach(el=>el.classList.toggle("show",el.dataset.p===t));
+  scrollTo(0,0); if(P&&t==="resumen"){curva(); diario();}
+  try{history.replaceState(null,"","#"+t)}catch(e){}
+}
+document.querySelectorAll(".tab,.seg button").forEach(b=>b.onclick=()=>ir(b.dataset.t));
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>ir(b.dataset.go));
+if(["bot","dca","ia"].includes(location.hash.slice(1))) setTimeout(()=>ir(location.hash.slice(1)),0);
 document.querySelectorAll("#rng .chip").forEach(b=>b.onclick=()=>{rango=+b.dataset.r; document.querySelectorAll("#rng .chip").forEach(x=>x.classList.toggle("on",x===b)); curva();});
 addEventListener("resize",()=>{if(P){diario();}});
 function cuenta(){const n=new Date(), next=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1,0,7), d=Math.max(0,next-n.getTime())/1000;
