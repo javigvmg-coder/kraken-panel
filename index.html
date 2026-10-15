@@ -165,6 +165,18 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 .ra .hz b{color:var(--fg)}
 .vis{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;margin-left:6px}
 .vis.al{background:#E3F7EE;color:var(--up)} .vis.ba{background:#FDECEC;color:var(--down)} .vis.ne{background:var(--panel2);color:var(--mute)}
+.av{display:flex;gap:12px;padding:13px 18px;border-top:1px solid var(--line);align-items:flex-start}
+.av .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;font-size:16px;background:var(--panel2)}
+.av .tx{font-size:13.5px;line-height:1.5;white-space:pre-line;min-width:0;flex:1}
+.av .tx b{display:block;font-size:14px;margin-bottom:1px}
+.av .tm{font-size:11.5px;color:var(--dim);white-space:nowrap}
+.av.nuevo{background:#F5F8FF}
+.nw{display:block;padding:13px 18px;border-top:1px solid var(--line);text-decoration:none;color:inherit}
+.nw:hover{background:var(--hover)}
+.nw .t{font-size:14px;font-weight:600;line-height:1.4}
+.nw .m{font-size:12px;color:var(--dim);margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--down);color:#fff;font-size:10.5px;font-weight:700;margin-left:4px}
+.tab{position:relative} .tab .badge{position:absolute;top:2px;right:calc(50% - 22px);margin:0}
 .best{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 18px 14px}
 @media (max-width:640px){.best{grid-template-columns:1fr}}
 .best>div{border-radius:14px;padding:14px;background:linear-gradient(135deg,#F2F6FF,#EEF8F4);border:1px solid var(--line)}
@@ -205,7 +217,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 <div class="wrap">
   <header class="bar">
     <div class="brand"><div class="logo"><i></i></div><div><h1>Kraken Bot</h1><small>Trading automático · KuCoin</small></div></div>
-    <div class="seg" id="seg"><button class="on" data-t="resumen">Resumen</button><button data-t="bot">Bot</button><button data-t="dca">Cartera DCA</button><button data-t="ia">Analista IA</button></div>
+    <div class="seg" id="seg"><button class="on" data-t="resumen">Resumen</button><button data-t="bot">Bot</button><button data-t="dca">Cartera DCA</button><button data-t="avisos">Avisos <span id="bdg1"></span></button><button data-t="ia">Analista IA</button></div>
     <span class="status" id="st"><span class="dot"></span>—</span>
     <span id="pMode" class="pill paper">Simulación</span><span id="pReg" class="pill">—</span>
   </header>
@@ -217,6 +229,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
       <div class="pc" data-go="bot"><div class="k">Bot de trading <span class="pill paper" style="font-size:10.5px">Simulación</span></div><div class="v" id="gBot">—</div><div class="s" id="gBotS">—</div></div>
       <div class="pc" data-go="dca"><div class="k">Cartera DCA ISO 20022 <span class="pill live" style="font-size:10.5px">Tus XRP</span></div><div class="v" id="gDca">—</div><div class="s" id="gDcaS">—</div></div>
     </div>
+    <div class="card" id="ultAv" style="margin-bottom:14px" data-go="avisos"></div>
     <div class="hero">
       <div><div class="lbl">Bot de trading · valor</div><div class="big num" id="bal">—</div></div>
       <div><div class="lbl">Desde el inicio</div><div class="chg" id="pnl">—</div></div>
@@ -295,6 +308,19 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
       <div class="tw"><table class="cards"><thead><tr><th>Fecha</th><th>Activo</th><th>Cantidad</th><th>Precio (USD)</th><th>Nota</th></tr></thead><tbody id="dcaCompras"></tbody></table></div>
     </section>
 
+    <section class="card c6" data-p="avisos">
+      <div class="ch"><h2>Avisos</h2><span class="r"><button class="chip on" data-fa="todos">Todos</button><button class="chip" data-fa="dca">DCA</button><button class="chip" data-fa="caida">Bajadas</button><button class="chip" data-fa="bot">Bot</button></span></div>
+      <div id="avisos"></div>
+    </section>
+    <section class="card c6" data-p="avisos">
+      <div class="ch"><h2>Noticias</h2><span class="r"><button class="chip on" data-fn="mias">Mis activos</button><button class="chip" data-fn="todas">Todas</button></span></div>
+      <div id="titulares"></div>
+    </section>
+
+    <section class="card c12" data-p="ia" id="infCard" hidden>
+      <div class="ch"><h2>Informe del gestor</h2><span class="r cnt" id="infT"></span></div>
+      <div class="con" id="inf" style="max-height:none;color:var(--fg);white-space:pre-line"></div>
+    </section>
     <section class="card c12" data-p="ia">
       <div class="ch"><h2>Visión del analista IA</h2><span class="r cnt" id="resT"></span></div>
       <div id="res"></div>
@@ -307,6 +333,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
   <button class="tab on" data-t="resumen"><svg viewBox="0 0 24 24"><path d="M3 12l9-8 9 8v8H3z"/></svg>Resumen</button>
   <button class="tab" data-t="bot"><svg viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>Bot</button>
   <button class="tab" data-t="dca"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 10l7-7 7 7"/><path d="M4 21h16"/></svg>DCA</button>
+  <button class="tab" data-t="avisos"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Avisos<span id="bdg2"></span></button>
   <button class="tab" data-t="ia"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Analista</button>
 </div></nav>
 
@@ -428,7 +455,10 @@ function render(rapido){
     ["Liquidez",f(P.cash)+" USDT"],["Capital inicial",f(ini)+" USDT"],["Stop por posición","3×ATR o −15%"],["Último ciclo",fecha(P.t)]];
   $("kv").innerHTML=KV.map(k=>`<span>${k[0]}</span><b>${k[1]}</b>`).join("");
   $("rT").textContent=fecha(P.t);
-  renderDca(); renderIA();
+  { const U=(P.avisos||[]).filter(a=>a.tipo!=="resumen").slice(-3).reverse();
+    $("ultAv").innerHTML=U.length?`<div class="ch"><h2>Últimos avisos</h2><span class="r cnt">ver todos ›</span></div>`+U.map(a=>{const [t1]=a.texto.split("\n"); return `<div class="av" style="cursor:pointer"><div class="tx"><b style="font-weight:600">${t1}</b></div><div class="tm">${fecha(a.t)}</div></div>`}).join(""):"";
+    $("ultAv").style.display=U.length?"":"none"; $("ultAv").style.cursor="pointer"; }
+  renderDca(); renderIA(); renderAvisos(); renderInforme();
   $("gBot").innerHTML=f(eq)+' <span style="font-size:14px;color:var(--mute)">USDT</span>';
   $("gBotS").innerHTML=`<span class="${cls(eq-ini)}">${pc(eq/ini-1)}</span> <span class="mute">desde el inicio · ${ps.length} posiciones</span>`;
   const DI=(P.diario||[]).slice().reverse();
@@ -500,6 +530,27 @@ function dcaDetalle(w){
     if(z.niveles){[["t1","tramo 1","#10B981"],["t2","tramo 2","#F59E0B"],["t3","tramo 3","#E5484D"]].forEach(([k,t,c])=>cs.createPriceLine({price:z.niveles[k],color:c,lineStyle:2,lineWidth:1,axisLabelVisible:true,title:t}));}
     CH2.timeScale().fitContent(); $("tfInfo").textContent="1 vela = 1 día · datos del bot"; });
 }
+let FA="todos", FN="mias";
+function visto(){ try{return +localStorage.getItem("avisos_visto")||0}catch(e){return 0} }
+function renderAvisos(){
+  const A=(P.avisos||[]).slice().reverse(), v=visto();
+  const ic={dca:["🎯","#EAF7F1"],caida:["📉","#FDECEC"],veto:["⛔","#FFF4DC"],compra:["🟢","#EAF7F1"],venta:["🔻","#FDECEC"],resumen:["📊","#EEF2FF"],info:["💬","#F1F4FA"]};
+  const grupo=a=>a.tipo==="dca"?"dca":a.tipo==="caida"?"caida":["compra","venta","veto","resumen"].includes(a.tipo)?"bot":"otros";
+  const L=A.filter(a=>FA==="todos"||grupo(a)===FA||(FA==="dca"&&a.tipo==="veto"&&a.texto.includes("DCA")));
+  $("avisos").innerHTML=L.length?L.map(a=>{const [i,bg]=ic[a.tipo]||ic.info; const [t1,...rest]=a.texto.split("\n");
+    return `<div class="av ${a.t>v?"nuevo":""}"><div class="ic" style="background:${bg}">${i}</div><div class="tx"><b>${t1.replace(/^[^\wÀ-ÿ]+/,"")}</b>${rest.join("\n")}</div><div class="tm">${fecha(a.t)}</div></div>`}).join(""):
+    `<div class="empty">Sin avisos todavía. Aquí aparecerán las bajadas, las zonas de compra DCA, las compras y ventas del bot y los vetos del analista.</div>`;
+  const nuevos=A.filter(a=>a.t>v).length, b=nuevos?`<span class="badge">${nuevos>9?"9+":nuevos}</span>`:"";
+  $("bdg1").innerHTML=b; $("bdg2").innerHTML=b;
+  const N=(P.titulares||[]).filter(n=>FN==="todas"||(n.activos||[]).length);
+  $("titulares").innerHTML=N.length?N.map(n=>`<a class="nw" href="${n.url||"#"}" target="_blank" rel="noopener"><div class="t">${n.titulo}</div>
+    <div class="m">${n.fuente} · ${n.t?fecha(n.t):""}${(n.activos||[]).map(x=>`<span class="tag" style="margin-left:0">${x}</span>`).join("")}${n.tipo&&n.tipo!=="otro"?`<span class="tag" style="margin-left:0;background:var(--panel2);color:var(--mute)">${n.tipo}</span>`:""}</div></a>`).join(""):
+    `<div class="empty">${FN==="mias"?"Ninguna noticia reciente menciona tus activos. Pulsa «Todas» para ver el resto.":"Cargando noticias en el próximo ciclo del bot."}</div>`;
+}
+document.querySelectorAll("[data-fa]").forEach(b=>b.onclick=()=>{FA=b.dataset.fa; document.querySelectorAll("[data-fa]").forEach(x=>x.classList.toggle("on",x===b)); renderAvisos();});
+document.querySelectorAll("[data-fn]").forEach(b=>b.onclick=()=>{FN=b.dataset.fn; document.querySelectorAll("[data-fn]").forEach(x=>x.classList.toggle("on",x===b)); renderAvisos();});
+function renderInforme(){ const I=P.informe; if(!I||!I.texto){ $("infCard").hidden=true; return; }
+  $("infCard").hidden=false; $("infT").textContent=I.fecha||""; $("inf").textContent=(I.resumen?I.resumen+"\n\n":"")+I.texto; }
 function renderIA(){
   const R=P.research;
   if(!R||!R.activos){ $("res").innerHTML=`<div class="empty">El analista IA publicará aquí su primera visión esta noche (análisis de noticias de tus activos DCA y de los candidatos del bot, a corto y largo plazo).</div>`; $("resT").textContent=""; return; }
@@ -611,6 +662,7 @@ setInterval(()=>{ if(!$("sheet").hidden && PSEL && ["1m","15m"].includes(TF)) ve
 $("close").onclick=()=>$("sheet").hidden=true;
 $("sheet").onclick=e=>{if(e.target.id==="sheet")$("sheet").hidden=true};
 function ir(t){
+  if(t==="avisos"&&P){ setTimeout(()=>{ try{localStorage.setItem("avisos_visto",String(Math.floor(Date.now()/1000)))}catch(e){} $("bdg1").innerHTML=""; $("bdg2").innerHTML=""; },4000); }
   document.querySelectorAll(".tab,.seg button").forEach(x=>x.classList.toggle("on",x.dataset.t===t));
   document.querySelectorAll("[data-p]").forEach(el=>el.classList.toggle("show",el.dataset.p===t));
   scrollTo(0,0); if(P&&t==="resumen"){curva(); diario();}
@@ -618,7 +670,7 @@ function ir(t){
 }
 document.querySelectorAll(".tab,.seg button").forEach(b=>b.onclick=()=>ir(b.dataset.t));
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>ir(b.dataset.go));
-if(["bot","dca","ia"].includes(location.hash.slice(1))) setTimeout(()=>ir(location.hash.slice(1)),0);
+if(["bot","dca","ia","avisos"].includes(location.hash.slice(1))) setTimeout(()=>ir(location.hash.slice(1)),0);
 document.querySelectorAll("#rng .chip").forEach(b=>b.onclick=()=>{rango=+b.dataset.r; document.querySelectorAll("#rng .chip").forEach(x=>x.classList.toggle("on",x===b)); curva();});
 addEventListener("resize",()=>{if(P){diario();}});
 function cuenta(){const n=new Date(), next=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1,0,7), d=Math.max(0,next-n.getTime())/1000;
