@@ -69,7 +69,7 @@ button{font:inherit;color:inherit}
 .c8{grid-column:span 8}.c4{grid-column:span 4}.c6{grid-column:span 6}.c12{grid-column:span 12}
 @media (max-width:999px){.grid{display:block}.grid>.card{margin-bottom:12px}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;min-width:0;display:flex;flex-direction:column}
-.ch{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:42px}
+.ch{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:42px}
 .ch h2{font-family:var(--display);font-size:11.5px;letter-spacing:.16em;margin:0;font-weight:600;white-space:nowrap}
 .ch .r{margin-left:auto;display:flex;gap:4px;align-items:center}
 .ch .cnt{font-family:var(--mono);font-size:11px;color:var(--dim)}
@@ -123,7 +123,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 .grab{width:40px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 10px}
 .close{float:right;background:none;border:1px solid var(--line2);color:var(--mute);border-radius:6px;padding:4px 10px;cursor:pointer}
 .dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
-.dl div span{display:block;color:var(--dim);font-size:10px;letter-spacing:.09em;text-transform:uppercase}
+.dl div>span:first-child{display:block;color:var(--dim);font-size:10px;letter-spacing:.09em;text-transform:uppercase}
 .dl div{font-family:var(--mono)}
 .foot{color:var(--dim);font-size:11px;text-align:center;padding:18px 0 8px;line-height:1.6;font-family:var(--mono)}
 .err{background:rgba(246,70,93,.08);border:1px solid rgba(246,70,93,.35);border-radius:8px;padding:10px 12px;margin:10px 0}
@@ -143,6 +143,21 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
   .tw{overflow-x:visible}
   .scroll{max-height:none}
 }
+/* cinta de precios */
+.tape{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none;padding:8px 0;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;white-space:nowrap}
+.tape::-webkit-scrollbar{display:none}
+.tape .tk b{font-family:var(--display);font-weight:600;margin-right:6px;color:var(--fg)}
+.tape .tk i{font-style:normal;margin-left:6px}
+.tape .tk.hold b{color:var(--amber2)}
+.flash-up{animation:fu .8s} .flash-down{animation:fd .8s}
+@keyframes fu{from{color:var(--up)}} @keyframes fd{from{color:var(--down)}}
+/* reparto */
+.alloc{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--panel2);margin-top:8px;min-width:220px}
+.alloc i{display:block;height:100%}
+.allocl{display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:6px}
+.allocl span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c);margin-right:5px;vertical-align:0}
+.lwc{width:100%;position:relative}
+.cd{font-family:var(--mono);font-size:20px;font-weight:600}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
@@ -154,6 +169,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     <span class="status" id="st"><span class="dot"></span>—</span>
     <span id="pMode" class="pill paper">PAPER</span><span id="pReg" class="pill">—</span>
   </header>
+  <div class="tape" id="tape"></div>
   <div id="err" class="err" hidden></div>
 
   <div data-p="resumen" class="show">
@@ -161,6 +177,8 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
       <div><div class="lbl">Valor de la cartera</div><div class="big num" id="bal">—</div></div>
       <div><div class="lbl">Desde el inicio</div><div class="chg" id="pnl">—</div></div>
       <div><div class="lbl">BTC mismo periodo</div><div class="chg" id="btcp">—</div></div>
+      <div><div class="lbl">Próxima decisión</div><div class="cd" id="cd">—</div></div>
+      <div style="flex:1;min-width:220px"><div class="lbl">Reparto de la cartera</div><div class="alloc" id="alloc"></div><div class="allocl" id="allocl"></div></div>
     </div>
     <div class="stats" id="stats"></div>
   </div>
@@ -169,7 +187,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     <section class="card c8 show" data-p="resumen">
       <div class="ch"><h2>BENEFICIO ACUMULADO</h2>
         <div class="r" id="rng"><button class="chip" data-r="1">24h</button><button class="chip" data-r="7">7d</button><button class="chip" data-r="30">30d</button><button class="chip on" data-r="0">Todo</button></div></div>
-      <canvas id="cv" height="250"></canvas>
+      <div id="cv" class="lwc" style="height:270px"></div>
       <div class="legend"><span><i style="background:var(--amber)"></i>Bot</span><span><i style="background:var(--mute)"></i>BTC comprar y mantener</span></div>
     </section>
     <section class="card c4 show" data-p="resumen">
@@ -224,10 +242,11 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
   <div class="grab"></div><button class="close" id="close">Cerrar</button>
   <div class="pair" style="font-family:var(--display);font-size:20px;font-weight:600" id="dSym"></div><div class="mono mute" id="dSub"></div>
   <div class="dl" id="dDl"></div>
-  <canvas id="cv2" height="280"></canvas>
-  <div class="legend"><span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span><i style="background:var(--amber)"></i>Actual</span></div>
+  <div id="cv2" class="lwc" style="height:320px"></div>
+  <div class="legend"><span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span></div>
 </div></div>
 
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const V=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
@@ -261,7 +280,7 @@ function trades(P){
 }
 
 function render(rapido){
-  ultimoRender=Date.now();
+  ultimoRender=Date.now(); cinta();
   const ini=P.capital_inicial, eq=P.equity, H=P.historial||[], ps=P.posiciones||[];
   // barra
   const edad=(Date.now()/1000-P.t)/60;
@@ -273,6 +292,10 @@ function render(rapido){
   $("bal").innerHTML=f(eq)+"<small>USDT</small>";
   $("pnl").innerHTML=`<span class="${cls(eq-ini)}">${sg(eq-ini)} USDT (${pc(eq/ini-1)})</span>`;
   const hb=H.filter(h=>h[2]); $("btcp").innerHTML=hb.length>1?`<span class="${cls(hb.at(-1)[2]/hb[0][2]-1)}">${pc(hb.at(-1)[2]/hb[0][2]-1)}</span>`:`<span class="dim">midiendo…</span>`;
+  // reparto
+  const pal=[V("--amber"),"#5b8def","#b07cf0","#e8c547",V("--up")], partes=ps.map((p,i)=>[base(p.s),p.qty*p.px,pal[i%pal.length]]).concat([["Liquidez",P.cash,V("--line2")]]);
+  $("alloc").innerHTML=partes.map(x=>`<i style="width:${x[1]/eq*100}%;background:${x[2]}"></i>`).join("");
+  $("allocl").innerHTML=partes.map(x=>`<span style="--c:${x[2]}">${x[0]} ${f(x[1]/eq*100,0)}%</span>`).join("");
   // estadísticas
   const abiertoU=ps.reduce((a,p)=>a+p.qty*p.px-(p.coste??p.qty*p.entrada),0);
   const cerr=T.filter(t=>t.usdt!=null), cerradoU=cerr.reduce((a,t)=>a+t.usdt,0);
@@ -341,23 +364,27 @@ function ejes(g,W,Hh,L,R,T,B,mn,mx,fmt){
 function prep(id,Hh){const cv=$(id),dpr=devicePixelRatio||1,W=cv.clientWidth; cv.width=W*dpr; cv.height=Hh*dpr; const g=cv.getContext("2d"); g.scale(dpr,dpr); return [g,W];}
 function vacio(g,t){g.fillStyle=V("--mute");g.font="12px "+V("--mono");g.textBaseline="top";g.fillText(t,12,16);}
 
+let CH=null,sBot=null,sBtc=null;
+function lwcBase(el,h){
+  return LightweightCharts.createChart(el,{height:h,layout:{background:{type:"solid",color:"transparent"},textColor:V("--dim"),fontFamily:"IBM Plex Mono, monospace",fontSize:10},
+    grid:{vertLines:{color:"rgba(255,255,255,0.03)"},horzLines:{color:V("--line")}},rightPriceScale:{borderColor:V("--line")},
+    timeScale:{borderColor:V("--line"),timeVisible:true,secondsVisible:false},crosshair:{mode:0},localization:{locale:"es-ES"},handleScroll:true,handleScale:true});
+}
 function curva(){
-  const Hh=250,[g,W]=prep("cv",Hh); let H=P.historial||[]; if(rango){const lim=P.t-rango*86400; H=H.filter(h=>h[0]>=lim);}
-  if(H.length<2)return vacio(g,"Aún no hay suficiente historial.");
-  const e0=H[0][1], hb=H.find(h=>h[2]), b0=hb?hb[2]:null;
-  const s=H.map(h=>h[1]/e0-1), b=H.map(h=>h[2]&&b0?h[2]/b0-1:null);
-  const all=s.concat(b.filter(x=>x!=null)); let mn=Math.min(0,...all), mx=Math.max(0,...all); const pad=(mx-mn)*.12||.01; mn-=pad; mx+=pad;
-  const L=8,R=54,T=12,B=22,t0=H[0][0],t1=H.at(-1)[0], X=t=>L+(t-t0)/(t1-t0||1)*(W-L-R), Y=v=>T+(1-(v-mn)/(mx-mn))*(Hh-T-B);
-  ejes(g,W,Hh,L,R,T,B,mn,mx,v=>pc(v,1));
-  g.fillStyle=V("--dim"); g.textAlign="center"; g.textBaseline="top";
-  [0,.5,1].forEach(k=>{const t=t0+(t1-t0)*k; g.fillText(new Date(t*1000).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}),Math.min(Math.max(X(t),L+24),W-R-24),Hh-B+6);});
-  g.setLineDash([3,3]); g.strokeStyle=V("--line2"); g.beginPath(); g.moveTo(L,Y(0)); g.lineTo(W-R,Y(0)); g.stroke(); g.setLineDash([]);
-  g.beginPath(); let on=false; H.forEach((h,i)=>{if(b[i]==null)return; on?g.lineTo(X(h[0]),Y(b[i])):g.moveTo(X(h[0]),Y(b[i])); on=true}); g.strokeStyle=V("--mute"); g.lineWidth=1.3; g.stroke();
-  const gr=g.createLinearGradient(0,T,0,Hh-B); gr.addColorStop(0,"rgba(255,138,31,.26)"); gr.addColorStop(1,"rgba(255,138,31,0)");
-  g.beginPath(); H.forEach((h,i)=>i?g.lineTo(X(h[0]),Y(s[i])):g.moveTo(X(h[0]),Y(s[i]))); g.lineTo(X(t1),Y(mn)); g.lineTo(X(t0),Y(mn)); g.fillStyle=gr; g.fill();
-  g.beginPath(); H.forEach((h,i)=>i?g.lineTo(X(h[0]),Y(s[i])):g.moveTo(X(h[0]),Y(s[i]))); g.strokeStyle=V("--amber"); g.lineWidth=2; g.stroke();
-  const ly=Y(s.at(-1)); g.fillStyle=V("--amber"); g.beginPath(); g.arc(X(t1),ly,3.5,0,7); g.fill();
-  g.fillStyle=V("--amber"); g.fillRect(W-R+1,ly-9,R-2,18); g.fillStyle="#140c03"; g.textAlign="left"; g.textBaseline="middle"; g.font="600 10.5px "+V("--mono"); g.fillText(pc(s.at(-1),1),W-R+5,ly);
+  if(!window.LightweightCharts) return;
+  let H=P.historial||[]; if(rango){const lim=P.t-rango*86400; H=H.filter(h=>h[0]>=lim);}
+  const el=$("cv");
+  if(!CH){ CH=lwcBase(el,270);
+    sBot=CH.addAreaSeries({lineColor:V("--amber"),topColor:"rgba(255,138,31,.28)",bottomColor:"rgba(255,138,31,0)",lineWidth:2,priceFormat:{type:"custom",formatter:v=>(v>=0?"+":"")+v.toFixed(2)+"%"}});
+    sBtc=CH.addLineSeries({color:V("--mute"),lineWidth:1,priceLineVisible:false,lastValueVisible:true,priceFormat:{type:"custom",formatter:v=>(v>=0?"+":"")+v.toFixed(2)+"%"}});
+    new ResizeObserver(()=>CH.applyOptions({width:el.clientWidth})).observe(el); }
+  if(H.length<2){ sBot.setData([]); sBtc.setData([]); return; }
+  const e0=H[0][1], hb=H.find(h=>h[2]), b0=hb?hb[2]:null, seen=new Set(), a=[], b=[];
+  H.forEach(h=>{ if(seen.has(h[0]))return; seen.add(h[0]); a.push({time:h[0],value:(h[1]/e0-1)*100}); if(h[2]&&b0) b.push({time:h[0],value:(h[2]/b0-1)*100}); });
+  sBot.setData(a); sBtc.setData(b);
+  sBot.setMarkers((P.log||[]).filter(l=>l.lado!=="veto"&&l.t>=H[0][0]).map(l=>{ const t=a.reduce((p,x)=>x.time<=l.t?x.time:p,a[0].time);
+    return {time:t,position:l.lado==="buy"?"belowBar":"aboveBar",color:l.lado==="buy"?V("--up"):V("--down"),shape:l.lado==="buy"?"arrowUp":"arrowDown",text:base(l.s)}}).sort((x,y)=>x.time-y.time));
+  CH.timeScale().fitContent();
 }
 function diario(){
   const Hh=250,[g,W]=prep("cvd",Hh), H=P.historial||[];
@@ -376,35 +403,44 @@ function detalle(p){
   $("sheet").hidden=false; const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1;
   $("dSym").innerHTML=`${base(p.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">${p.tipo==="val"?"VALOR":"MOMENTUM"}</span>`;
   $("dSub").innerHTML=`<span class="${cls(r)}">${pc(r)} · ${sg(v-c)} USDT</span> · valor ${f(v)} USDT`;
-  $("dDl").innerHTML=[["Entrada",px(p.entrada)],["Actual",px(p.px)],["Stop",`<span class="down">${px(p.stop)}</span>`],["Máximo",px(p.max)],["Cantidad",f(p.qty,4)],["Margen al stop",pc(p.px/p.stop-1,1)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
+  $("dDl").innerHTML=[["Entrada",px(p.entrada)],["Actual",px(p.px)],["Stop",`<b class="down" style="font-weight:500">${px(p.stop)}</b>`],["Máximo",px(p.max)],["Cantidad",f(p.qty,4)],["Margen al stop",pc(p.px/p.stop-1,1)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
   requestAnimationFrame(()=>velas(p));
 }
+let CH2=null;
 function velas(p){
-  const Hh=280,[g,W]=prep("cv2",Hh), K=((P.velas||{})[p.s]||[]).slice(-60);
-  if(!K.length)return vacio(g,"Sin velas disponibles todavía.");
-  const lv=[p.entrada,p.stop,p.px]; let mn=Math.min(...K.map(k=>k[3]),...lv), mx=Math.max(...K.map(k=>k[2]),...lv); const pad=(mx-mn)*.06; mn-=pad; mx+=pad;
-  const L=6,R=66,T=8,B=22,n=K.length,cw=(W-L-R)/n, Y=v=>T+(1-(v-mn)/(mx-mn))*(Hh-T-B);
-  ejes(g,W,Hh,L,R,T,B,mn,mx,px);
-  K.forEach((k,i)=>{const x=L+i*cw+cw/2,c=k[4]>=k[1]?V("--up"):V("--down"); g.strokeStyle=c; g.fillStyle=c; g.lineWidth=1;
-    g.beginPath(); g.moveTo(x,Y(k[2])); g.lineTo(x,Y(k[3])); g.stroke(); const y1=Y(Math.max(k[1],k[4])),y2=Y(Math.min(k[1],k[4])); g.fillRect(x-cw*.35,y1,cw*.7,Math.max(1,y2-y1));});
-  [[p.entrada,V("--mute"),1],[p.stop,V("--down"),1],[p.px,V("--amber"),0]].forEach(([v,c,dash])=>{g.setLineDash(dash?[4,3]:[]); g.strokeStyle=c; g.lineWidth=1.2;
-    g.beginPath(); g.moveTo(L,Y(v)); g.lineTo(W-R,Y(v)); g.stroke(); g.setLineDash([]); g.fillStyle=c; g.fillRect(W-R+2,Y(v)-8,R-4,16);
-    g.fillStyle="#140c03"; g.textAlign="left"; g.textBaseline="middle"; g.font="600 10px "+V("--mono"); g.fillText(px(v),W-R+5,Y(v));});
-  g.fillStyle=V("--dim"); g.font="10px "+V("--mono"); g.textAlign="center"; g.textBaseline="top";
-  [0,Math.floor(n/2),n-1].forEach(i=>g.fillText(new Date(K[i][0]*1000).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}),Math.min(Math.max(L+i*cw+cw/2,24),W-R-24),Hh-B+6));
+  const el=$("cv2"); if(CH2){CH2.remove();CH2=null;}
+  const K=((P.velas||{})[p.s]||[]);
+  if(!window.LightweightCharts||!K.length){ el.innerHTML='<div class="empty">Sin velas disponibles todavía.</div>'; return; }
+  el.innerHTML=""; CH2=lwcBase(el,320); CH2.applyOptions({width:el.clientWidth,timeScale:{timeVisible:false}});
+  const cs=CH2.addCandlestickSeries({upColor:V("--up"),downColor:V("--down"),borderVisible:false,wickUpColor:V("--up"),wickDownColor:V("--down"),
+    priceFormat:{type:"price",precision:p.px<1?6:p.px<100?4:2,minMove:p.px<1?0.000001:p.px<100?0.0001:0.01}});
+  cs.setData(K.map(k=>({time:k[0],open:k[1],high:k[2],low:k[3],close:k[4]})));
+  cs.createPriceLine({price:p.entrada,color:V("--mute"),lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"entrada"});
+  cs.createPriceLine({price:p.stop,color:V("--down"),lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"stop"});
+  const t0=K[0][0], dia=86400;
+  cs.setMarkers((P.log||[]).filter(l=>l.s===p.s&&l.lado!=="veto"&&l.t>=t0).map(l=>({time:Math.floor(l.t/dia)*dia,position:l.lado==="buy"?"belowBar":"aboveBar",
+    color:l.lado==="buy"?V("--up"):V("--down"),shape:l.lado==="buy"?"arrowUp":"arrowDown",text:l.lado==="buy"?"compra":"venta"})).sort((a,b)=>a.time-b.time));
+  CH2.timeScale().fitContent();
 }
-
 /* ---------- precios en tiempo real (flujo público de Binance) ---------- */
 let ws=null, wsKey="", vivo={}, ultimoRender=0, pend=false;
 function conectarVivo(){
-  const syms=[...new Set([...(P.posiciones||[]).map(p=>p.s),"BTC/USDT"])].map(s=>s.replace("/","").toLowerCase());
+  const top=(P.ranking||[]).filter(r=>!(P.universo||[]).length||(P.universo||[]).includes(r.s)).slice(0,8).map(r=>r.s);
+  const syms=[...new Set([...(P.posiciones||[]).map(p=>p.s),"BTC/USDT","ETH/USDT",...top])].map(s=>s.replace("/","").toLowerCase());
   const key=syms.sort().join(","); if(key===wsKey&&ws&&ws.readyState<2) return;
   wsKey=key; try{ws&&ws.close()}catch(e){}
   try{ ws=new WebSocket("wss://data-stream.binance.vision/stream?streams="+syms.map(s=>s+"@miniTicker").join("/")); }catch(e){ return; }
   ws.onmessage=ev=>{ const d=JSON.parse(ev.data).data; if(!d||!d.s) return;
-    vivo[d.s.replace(/USDT$/,"/USDT")]={px:+d.c, t:Date.now()};
+    const k=d.s.replace(/USDT$/,"/USDT"), ant=vivo[k]; vivo[k]={px:+d.c, o:+d.o, t:Date.now(), dir:ant?Math.sign(+d.c-ant.px):0};
     if(!pend){ pend=true; setTimeout(()=>{ pend=false; aplicarVivo(); render(true); }, Math.max(0,1000-(Date.now()-ultimoRender))); } };
   ws.onclose=()=>{ setTimeout(()=>{ if(P){ wsKey=""; conectarVivo(); } }, 5000); };
+}
+function cinta(){
+  const hold=new Set((P.posiciones||[]).map(p=>p.s));
+  const lista=[...new Set(["BTC/USDT","ETH/USDT",...(P.posiciones||[]).map(p=>p.s),...(P.ranking||[]).slice(0,8).map(r=>r.s)])];
+  $("tape").innerHTML=lista.map(s=>{const v=vivo[s], r=(P.ranking||[]).find(x=>x.s===s); const pxv=v?v.px:r?.px; if(pxv==null)return"";
+    const ch=v&&v.o?v.px/v.o-1:null;
+    return `<span class="tk ${hold.has(s)?"hold":""}"><b>${base(s)}</b><span class="${v&&v.dir>0?"flash-up":v&&v.dir<0?"flash-down":""}">${px(pxv)}</span>${ch==null?"":`<i class="${cls(ch)}">${pc(ch)}</i>`}</span>`}).join("");
 }
 function aplicarVivo(){
   if(!P) return; let n=0;
@@ -420,7 +456,10 @@ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
   scrollTo(0,0); if(P){curva(); diario();}
 });
 document.querySelectorAll("#rng .chip").forEach(b=>b.onclick=()=>{rango=+b.dataset.r; document.querySelectorAll("#rng .chip").forEach(x=>x.classList.toggle("on",x===b)); curva();});
-addEventListener("resize",()=>{if(P){curva(); diario();}});
+addEventListener("resize",()=>{if(P){diario();}});
+function cuenta(){const n=new Date(), next=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1,0,7), d=Math.max(0,next-n.getTime())/1000;
+  $("cd").textContent=String(Math.floor(d/3600)).padStart(2,"0")+":"+String(Math.floor(d%3600/60)).padStart(2,"0")+":"+String(Math.floor(d%60)).padStart(2,"0");}
+setInterval(cuenta,1000); cuenta();
 cargar(); setInterval(cargar,60000);
 </script>
 </body>
