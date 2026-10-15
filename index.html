@@ -10,6 +10,8 @@
 <title>Kraken Bot</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23FFFFFF'/><circle cx='32' cy='32' r='17' fill='none' stroke='%233D7BFF' stroke-width='5'/><circle cx='32' cy='32' r='6' fill='%233D7BFF'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23FFFFFF'/><circle cx='32' cy='32' r='17' fill='none' stroke='%233D7BFF' stroke-width='5'/><circle cx='32' cy='32' r='6' fill='%233D7BFF'/></svg>">
+<link rel="manifest" href="manifest.json">
+<script>try{const t=localStorage.getItem("tema")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: app fintech (estilo Revolut/Robinhood). Escritorio: cabecera + tarjeta héroe + rejilla de 12 columnas.
@@ -24,6 +26,21 @@
   --display:"Inter",system-ui,sans-serif; --mono:"Inter",system-ui,sans-serif; --sans:"Inter",system-ui,sans-serif;
   --r:16px;
 }
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#0B1020; --bg2:#121A2E; --panel:#111829; --panel2:#18213A; --hover:#162038; --line:#1F2A44; --line2:#2A3756;
+  --fg:#E8EDF7; --mute:#9AA6BF; --dim:#6B7894; --accent-soft:rgba(47,107,255,.16);
+  --up:#22C38E; --down:#F0616D; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25)}
+:root[data-theme="dark"] .tape .tk.hold{background:#14224A}
+:root[data-theme="dark"] .tool input,:root[data-theme="dark"] .tool select,:root[data-theme="dark"] .lg{background:var(--panel2)}
+:root[data-theme="dark"] nav{background:rgba(17,24,41,.9);border-color:var(--line)}
+.ico{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);display:inline-grid;place-items:center;cursor:pointer;flex:none}
+.ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.star{font-size:22px;line-height:1;background:none;border:0;cursor:pointer;color:var(--dim);padding:0 4px;vertical-align:middle}
+.star.on{color:#F5B301}
+.heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;padding:0 18px 18px}
+.heat div{border-radius:10px;padding:10px;color:#fff;cursor:pointer;min-height:64px;display:flex;flex-direction:column;justify-content:space-between;font-variant-numeric:tabular-nums}
+.heat b{font-size:14px} .heat span{font-size:12px;opacity:.95}
+.ind{display:flex;gap:6px;align-items:center;margin:0 0 8px;flex-wrap:wrap}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
 body{background:radial-gradient(900px 420px at 10% -12%,rgba(47,107,255,.10),transparent 60%),var(--bg);background-attachment:fixed;
@@ -251,6 +268,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     <div class="brand"><div class="logo"><i></i></div><div><h1>Kraken Bot</h1><small>Trading automático · KuCoin</small></div></div>
     <div class="seg" id="seg"><button class="on" data-t="resumen">Resumen</button><button data-t="bot">Bot</button><button data-t="dca">Cartera DCA</button><button data-t="avisos">Avisos <span id="bdg1"></span></button><button data-t="ia">Analista IA</button></div>
     <span class="status" id="st"><span class="dot"></span>—</span>
+    <button class="ico" id="tema" title="Modo claro / oscuro" aria-label="Cambiar tema"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     <span id="pMode" class="pill paper">Simulación</span><span id="pReg" class="pill">—</span>
   </header>
   <div class="busca"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
@@ -291,6 +309,11 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     <section class="card c8 show" data-p="resumen">
       <div class="ch"><h2>Posiciones abiertas</h2><span class="r cnt" id="oN"></span></div>
       <div class="tw"><table class="cards"><thead><tr><th>Par</th><th>Cantidad</th><th>Entrada</th><th>Actual</th><th>Valor</th><th>Beneficio</th><th>Stop</th><th>Abierta</th></tr></thead><tbody id="open"></tbody></table></div>
+    </section>
+    <section class="card c12 show" data-p="resumen">
+      <div class="ch"><h2>Mercado</h2><span class="mute" style="font-size:12px">Binance · toca una cripto para ver su gráfico</span></div>
+      <div class="mf"><button class="chip on" data-m="vol">Más negociadas</button><button class="chip" data-m="up">Más suben</button><button class="chip" data-m="down">Más bajan</button><button class="chip" data-m="fav">★ Favoritos</button><button class="chip" data-m="heat">Mapa de calor</button></div>
+      <div class="tw" id="mktT"><table class="cards"><thead><tr><th>Activo</th><th>Precio</th><th>24h</th><th>Volumen 24h</th></tr></thead><tbody id="mkt"></tbody></table></div><div class="heat" id="heat" hidden></div>
     </section>
     <section class="card c4" data-p="bot">
       <div class="ch"><h2>Estado del bot</h2></div>
@@ -387,11 +410,13 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 
 <div class="sheet" id="sheet" hidden><div class="in">
   <div class="grab"></div><button class="close" id="close">Cerrar</button>
-  <div class="pair" style="font-family:var(--display);font-size:20px;font-weight:600" id="dSym"></div><div class="mono mute" id="dSub"></div>
+  <div style="display:flex;align-items:center"><div class="pair" style="font-family:var(--display);font-size:20px;font-weight:600" id="dSym"></div><button class="star" id="dStar" title="Añadir a favoritos" aria-label="Favorito">☆</button></div><div class="mono mute" id="dSub"></div>
   <div class="dl" id="dDl"></div>
   <div id="tfRow" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px"><span class="mute" style="font-size:12px;font-weight:600;margin-right:4px">Velas</span>
     <button class="chip" data-tf="1m">1m</button><button class="chip" data-tf="15m">15m</button><button class="chip" data-tf="1h">1h</button><button class="chip" data-tf="4h">4h</button><button class="chip on" data-tf="1d">1D</button><button class="chip" data-tf="1w">1W</button>
     <span class="dim" id="tfInfo" style="font-size:12px;margin-left:auto"></span></div>
+  <div class="ind" id="indRow"><span class="mute" style="font-size:12px;font-weight:600;margin-right:4px">Indicadores</span>
+    <button class="chip on" data-ind="vol">Volumen</button><button class="chip on" data-ind="ma20">Media 20</button><button class="chip" data-ind="ma50">Media 50</button><button class="chip" data-ind="ma200">Media 200</button><span class="dim" id="rsiInfo" style="font-size:12px;margin-left:auto"></span></div>
   <div id="cv2" class="lwc" style="height:320px"></div>
   <div class="legend" id="sheetLeg"><span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span></div>
 </div></div>
@@ -568,7 +593,7 @@ function renderDca(){
 function dcaDetalle(w){
   const z=w.zona||{}; PSEL=null; $("tfRow").style.display="none";
   $("sheetLeg").innerHTML=z.niveles?'<span><i style="background:#10B981"></i>Tramo 1</span><span><i style="background:#F59E0B"></i>Tramo 2 (−15%)</span><span><i style="background:#E5484D"></i>Tramo 3 (−28%)</span>':'<span>Velas diarias · sin zona de compra activa</span>';
-  $("sheet").hidden=false;
+  $("sheet").hidden=false; favPintar(w.s); $("indRow").style.display="none"; $("rsiInfo").textContent="";
   $("dSym").innerHTML=`${logo(w.s)}${base(w.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">DCA largo plazo</span>`;
   $("dSub").innerHTML=`${pc(w.caida_1a,0)} desde máximo de 1 año · RSI semanal ${f(w.rsi_sem,0)} · ${w.estado}`;
   $("dDl").innerHTML=[["Precio",px(w.px)],["Tramo 1",z.niveles?px(z.niveles.t1):"—"],["Tramo 2",z.niveles?px(z.niveles.t2):"—"],["Tramo 3",z.niveles?px(z.niveles.t3):"—"],["24h",pc(w.ch24h,1)],["vs media 200d",w.vs_ma200==null?"—":pc(w.vs_ma200,0)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
@@ -670,7 +695,7 @@ function renderIA(){
 let CH=null,sBot=null,sBtc=null;
 function lwcBase(el,h){
   return LightweightCharts.createChart(el,{height:h,layout:{background:{type:"solid",color:"transparent"},textColor:V("--dim"),fontFamily:"Inter, system-ui, sans-serif",fontSize:11},
-    grid:{vertLines:{visible:false},horzLines:{color:"#EEF1F6"}},rightPriceScale:{borderVisible:false},
+    grid:{vertLines:{visible:false},horzLines:{color:V("--line")}},rightPriceScale:{borderVisible:false},
     timeScale:{borderVisible:false,timeVisible:true,secondsVisible:false},crosshair:{mode:0},localization:{locale:"es-ES"},handleScroll:true,handleScale:true});
 }
 function curva(){
@@ -703,7 +728,7 @@ function diario(){
   [0,n-1].forEach(i=>g.fillText(vals[i][0].slice(8)+"/"+vals[i][0].slice(5,7),Math.min(Math.max(L+i*bw+bw/2,20),W-R-20),Hh-B+6));
 }
 function detalle(p){
-  $("sheet").hidden=false; const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1;
+  $("sheet").hidden=false; favPintar(p.s); const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1;
   $("dSym").innerHTML=`${logo(p.s)}${base(p.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">${p.tipo==="val"?"Valor":"Momentum"}</span>`;
   $("dSub").innerHTML=`<span class="${cls(r)}">${pc(r)} · ${sg(v-c)} USDT</span> · valor ${f(v)} USDT`;
   $("dDl").innerHTML=[["Entrada",px(p.entrada)],["Actual",px(p.px)],["Stop",`<b class="down" style="font-weight:500">${px(p.stop)}</b>`],["Máximo",px(p.max)],["Cantidad",f(p.qty,4)],["Margen al stop",pc(p.px/p.stop-1,1)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
@@ -716,17 +741,18 @@ async function velasTF(p){
   try{ const r=await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${p.s.replace("/","")}&interval=${TF}&limit=${TF==="1w"?150:TF==="1d"?365:300}`);
        if(!r.ok) throw 0; const k=await r.json(); if(!k.length) throw 0;
        $("tfInfo").textContent=`1 vela = ${NOM[TF]} · Binance en vivo`;
-       return k.map(x=>[Math.floor(x[0]/1000),+x[1],+x[2],+x[3],+x[4]]); }
+       return k.map(x=>[Math.floor(x[0]/1000),+x[1],+x[2],+x[3],+x[4],+x[5]]); }
   catch(e){ $("tfInfo").textContent=(TF==="1d"?"1 vela = 1 día · datos del bot":"Sin velas de "+NOM[TF]+" para esta cripto; muestro 1D"); return (P.velas||{})[p.s]||[]; }
 }
 async function velas(p){
-  PSEL=p; $("tfRow").style.display="flex"; $("sheetLeg").innerHTML=p.entrada?'<span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span>':'<span>▲▼ operaciones del bot en esta cripto, si las hubo</span>'; const el=$("cv2"); if(CH2){CH2.remove();CH2=null;}
+  PSEL=p; $("tfRow").style.display="flex"; $("indRow").style.display="flex"; $("sheetLeg").innerHTML=p.entrada?'<span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span>':'<span>▲▼ operaciones del bot en esta cripto, si las hubo</span>'; const el=$("cv2"); if(CH2){CH2.remove();CH2=null;}
   const K=await velasTF(p);
   if(!window.LightweightCharts||!K.length){ el.innerHTML='<div class="empty">Sin velas disponibles todavía.</div>'; return; }
   el.innerHTML=""; CH2=lwcBase(el,320); CH2.applyOptions({width:el.clientWidth,timeScale:{timeVisible:!["1d","1w"].includes(TF),secondsVisible:false}});
   const cs=CH2.addCandlestickSeries({upColor:V("--up"),downColor:V("--down"),borderVisible:false,wickUpColor:V("--up"),wickDownColor:V("--down"),
     priceFormat:(()=>{const d=p.px>=100?2:p.px>=1?4:Math.min(10,Math.max(4,Math.ceil(-Math.log10(p.px||1e-4))+3)); return {type:"price",precision:d,minMove:Math.pow(10,-d)};})()});
   cs.setData(K.map(k=>({time:k[0],open:k[1],high:k[2],low:k[3],close:k[4]})));
+  indicadores(CH2,K);
   if(p.entrada) cs.createPriceLine({price:p.entrada,color:V("--mute"),lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"entrada"});
   if(p.stop) cs.createPriceLine({price:p.stop,color:V("--down"),lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"stop"});
   const t0=K[0][0], dia={"1m":60,"15m":900,"1h":3600,"4h":14400,"1d":86400,"1w":604800}[TF];
@@ -741,11 +767,37 @@ async function cargarMercado(){ try{ const r=await fetch("https://data-api.binan
   MK=j.filter(t=>t.symbol.endsWith("USDT")&&!st.test(t.symbol)&&+t.quoteVolume>0).map(t=>({s:t.symbol.replace(/USDT$/,"/USDT"),px:+t.lastPrice,ch:+t.priceChangePercent/100,vol:+t.quoteVolume,hi:+t.highPrice,lo:+t.lowPrice}));
   pintarMercado(); }catch(e){ $("mkt").innerHTML='<tr><td colspan="4" class="empty">No se pudo cargar el mercado.</td></tr>'; } }
 function volF(v){return v>=1e9?f(v/1e9,1)+" B":v>=1e6?f(v/1e6,1)+" M":f(v/1e3,0)+" K"}
-function pintarMercado(){ let L=MK.filter(m=>m.vol>2e6);
+const IND=(()=>{try{return JSON.parse(localStorage.getItem("ind"))||{vol:1,ma20:1}}catch(e){return {vol:1,ma20:1}}})();
+document.querySelectorAll("[data-ind]").forEach(b=>{b.classList.toggle("on",!!IND[b.dataset.ind]); b.onclick=()=>{IND[b.dataset.ind]=!IND[b.dataset.ind]; b.classList.toggle("on",!!IND[b.dataset.ind]); try{localStorage.setItem("ind",JSON.stringify(IND))}catch(e){} if(PSEL) velas(PSEL);};});
+function indicadores(ch,K){
+  const c=K.map(k=>k[4]);
+  if(IND.vol&&K[0].length>5){ const v=ch.addHistogramSeries({priceScaleId:"vol",priceFormat:{type:"volume"},lastValueVisible:false,priceLineVisible:false});
+    ch.priceScale("vol").applyOptions({scaleMargins:{top:.82,bottom:0}});
+    v.setData(K.map(k=>({time:k[0],value:k[5],color:k[4]>=k[1]?"rgba(15,163,107,.35)":"rgba(229,72,77,.35)"}))); }
+  [["ma20",20,"#2F6BFF"],["ma50",50,"#F59E0B"],["ma200",200,"#8B5CF6"]].forEach(([k,n,col])=>{ if(!IND[k]||c.length<n) return;
+    const d=[]; let sum=0; c.forEach((x,i)=>{sum+=x; if(i>=n) sum-=c[i-n]; if(i>=n-1) d.push({time:K[i][0],value:sum/n});});
+    ch.addLineSeries({color:col,lineWidth:1.5,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false}).setData(d); });
+  // RSI 14
+  if(c.length>15){ let g=0,l=0; for(let i=1;i<=14;i++){const d=c[i]-c[i-1]; d>0?g+=d:l-=d;} g/=14; l/=14;
+    for(let i=15;i<c.length;i++){const d=c[i]-c[i-1]; g=(g*13+Math.max(d,0))/14; l=(l*13+Math.max(-d,0))/14;}
+    const r=l?100-100/(1+g/l):100; $("rsiInfo").innerHTML=`RSI 14: <b class="${r>70?"down":r<30?"up":""}">${f(r,0)}</b> ${r>70?"· sobrecompra":r<30?"· sobreventa":""}`; } else $("rsiInfo").textContent="";
+}
+let FAV=(()=>{try{return JSON.parse(localStorage.getItem("fav"))||[]}catch(e){return []}})();
+function favPintar(s){ const on=FAV.includes(s); $("dStar").textContent=on?"★":"☆"; $("dStar").classList.toggle("on",on); $("dStar").dataset.s=s; }
+$("dStar").onclick=()=>{ const s=$("dStar").dataset.s; FAV=FAV.includes(s)?FAV.filter(x=>x!==s):[...FAV,s]; try{localStorage.setItem("fav",JSON.stringify(FAV))}catch(e){} favPintar(s); pintarMercado(); if(P) cinta(); };
+function pintarMercado(){
+  $("heat").hidden=MODO!=="heat"; $("mktT").hidden=MODO==="heat";
+  if(MODO==="heat"){ const L=MK.filter(m=>m.vol>2e6).sort((a,b)=>b.vol-a.vol).slice(0,48);
+    $("heat").innerHTML=L.map(m=>{const a=Math.min(Math.abs(m.ch)/0.08,1), bg=m.ch>=0?`rgba(16,163,107,${.6+.4*a})`:`rgba(229,72,77,${.6+.4*a})`;
+      return `<div data-s="${m.s}" style="background:${bg}"><b>${base(m.s)}</b><span>${pc(m.ch,1)}</span></div>`}).join(""); return; }
+  if(MODO==="fav"){ const L=FAV.map(s=>MK.find(m=>m.s===s)).filter(Boolean);
+    $("mkt").innerHTML=L.length?L.map(filaM).join(""):'<tr><td colspan="4" class="empty">Abre cualquier cripto y toca ☆ para guardarla aquí.</td></tr>'; return; }
+  let L=MK.filter(m=>m.vol>2e6);
   L=MODO==="up"?L.sort((a,b)=>b.ch-a.ch):MODO==="down"?L.sort((a,b)=>a.ch-b.ch):L.sort((a,b)=>b.vol-a.vol);
-  $("mkt").innerHTML=L.slice(0,20).map(m=>`<tr class="clk" data-s="${m.s}"><td data-l="Activo">${logo(m.s)}<span class="pair">${base(m.s)}</span></td><td data-l="Precio">${px(m.px)}</td><td data-l="24h" class="${cls(m.ch)}">${pc(m.ch)}</td><td data-l="Volumen">${volF(m.vol)} $</td></tr>`).join(""); }
+  $("mkt").innerHTML=L.slice(0,20).map(filaM).join(""); }
+const filaM=m=>`<tr class="clk" data-s="${m.s}"><td data-l="Activo">${logo(m.s)}<span class="pair">${base(m.s)}</span>${FAV.includes(m.s)?' <span style="color:#F5B301">★</span>':''}</td><td data-l="Precio">${px(m.px)}</td><td data-l="24h" class="${cls(m.ch)}">${pc(m.ch)}</td><td data-l="Volumen">${volF(m.vol)} $</td></tr>`;
 document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{MODO=b.dataset.m;document.querySelectorAll("[data-m]").forEach(x=>x.classList.toggle("on",x===b));pintarMercado();});
-document.addEventListener("click",e=>{ const t=e.target.closest("tr.clk[data-s],.tape .tk[data-s],.res div[data-s]"); if(t){ $("qres").hidden=true; $("q").value=""; verCripto(t.dataset.s); } else if(!e.target.closest(".busca")) $("qres").hidden=true; });
+document.addEventListener("click",e=>{ const t=e.target.closest("tr.clk[data-s],.tape .tk[data-s],.res div[data-s],.heat div[data-s]"); if(t){ $("qres").hidden=true; $("q").value=""; verCripto(t.dataset.s); } else if(!e.target.closest(".busca")) $("qres").hidden=true; });
 $("q").oninput=()=>{ const q=$("q").value.trim().toUpperCase(); if(!q){$("qres").hidden=true;return;}
   const L=MK.filter(m=>base(m.s).startsWith(q)).sort((a,b)=>(base(a.s)===q?-1:0)-(base(b.s)===q?-1:0)||b.vol-a.vol).concat(MK.filter(m=>!base(m.s).startsWith(q)&&base(m.s).includes(q))).slice(0,12);
   $("qres").innerHTML=L.length?L.map(m=>`<div data-s="${m.s}">${logo(m.s)}<b>${base(m.s)}</b><span class="dim" style="margin-left:4px">/USDT</span><span>${px(m.px)} <i class="${cls(m.ch)}" style="font-style:normal">${pc(m.ch,1)}</i></span></div>`).join(""):'<div class="mute">No está en Binance con par USDT</div>';
@@ -755,7 +807,7 @@ function verCripto(s){
   const pos=(P.posiciones||[]).find(p=>p.s===s); if(pos) return detalle(pos);
   const w=(P.dca&&P.dca.watch||[]).find(x=>x.s===s);
   const m=MK.find(x=>x.s===s)||{s,px:w?w.px:0};
-  $("sheet").hidden=false;
+  $("sheet").hidden=false; favPintar(s);
   $("dSym").innerHTML=`${logo(s)}${base(s)}<span class="dim" style="font-size:13px">/USDT</span>${w?' <span class="tag">Radar DCA</span>':''}`;
   $("dSub").innerHTML=m.ch!=null?`<span class="${cls(m.ch)}">${pc(m.ch)} en 24h</span> · volumen ${volF(m.vol||0)} $`:"";
   const r=(P.ranking||[]).findIndex(x=>x.s===s);
@@ -766,7 +818,7 @@ function verCripto(s){
 let ws=null, wsKey="", vivo={}, ultimoRender=0, pend=false;
 function conectarVivo(){
   const top=(P.ranking||[]).filter(r=>!(P.universo||[]).length||(P.universo||[]).includes(r.s)).slice(0,8).map(r=>r.s);
-  const syms=[...new Set([...(P.posiciones||[]).map(p=>p.s),"BTC/USDT","ETH/USDT",...top])].map(s=>s.replace("/","").toLowerCase());
+  const syms=[...new Set([...(P.posiciones||[]).map(p=>p.s),"BTC/USDT","ETH/USDT",...FAV,...top])].map(s=>s.replace("/","").toLowerCase());
   const key=syms.sort().join(","); if(key===wsKey&&ws&&ws.readyState<2) return;
   wsKey=key; try{ws&&ws.close()}catch(e){}
   try{ ws=new WebSocket("wss://data-stream.binance.vision/stream?streams="+syms.map(s=>s+"@miniTicker").join("/")); }catch(e){ return; }
@@ -777,8 +829,8 @@ function conectarVivo(){
 }
 function cinta(){
   const hold=new Set((P.posiciones||[]).map(p=>p.s));
-  const lista=[...new Set(["BTC/USDT","ETH/USDT",...(P.posiciones||[]).map(p=>p.s),...(P.ranking||[]).slice(0,8).map(r=>r.s)])];
-  $("tape").innerHTML=lista.map(s=>{const v=vivo[s], r=(P.ranking||[]).find(x=>x.s===s); const pxv=v?v.px:r?.px; if(pxv==null)return"";
+  const lista=[...new Set(["BTC/USDT","ETH/USDT",...(P.posiciones||[]).map(p=>p.s),...FAV,...(P.ranking||[]).slice(0,8).map(r=>r.s)])];
+  $("tape").innerHTML=lista.map(s=>{const v=vivo[s], r=(P.ranking||[]).find(x=>x.s===s); const mk=MK.find(x=>x.s===s); const pxv=v?v.px:r?.px??mk?.px; if(pxv==null)return"";
     const ch=v&&v.o?v.px/v.o-1:null;
     return `<span data-s="${s}" class="tk ${hold.has(s)?"hold":""}">${logo(s)}<b>${base(s)}</b><span class="${v&&v.dir>0?"flash-up":v&&v.dir<0?"flash-down":""}">${px(pxv)}</span>${ch==null?"":`<i class="${cls(ch)}">${pc(ch)}</i>`}</span>`}).join("");
 }
@@ -808,11 +860,8 @@ function cuenta(){const n=new Date(), next=Date.UTC(n.getUTCFullYear(),n.getUTCM
   $("cd").textContent=String(Math.floor(d/3600)).padStart(2,"0")+":"+String(Math.floor(d%3600/60)).padStart(2,"0")+":"+String(Math.floor(d%60)).padStart(2,"0");}
 setInterval(cuenta,1000); cuenta();
 cargar(); setInterval(cargar,60000); cargarFNG(); setInterval(cargarFNG,3600000); cargarMercado(); setInterval(cargarMercado,60000);
+$("tema").onclick=()=>{ const t=document.documentElement.dataset.theme==="dark"?"light":"dark"; document.documentElement.dataset.theme=t; try{localStorage.setItem("tema",t)}catch(e){}
+  document.querySelector('meta[name=theme-color]').content=t==="dark"?"#0B1020":"#F5F7FB"; if(P){ render(); } if(!$("sheet").hidden&&PSEL) velas(PSEL); };
 </script>
 </body>
-</html><section class="card c12" data-p="resumen">
-      <div class="ch"><h2>Mercado</h2><span class="mute" style="font-size:12px">Binance · toca una cripto para ver su gráfico</span></div>
-      <div class="mf"><button class="chip on" data-m="vol">Más negociadas</button><button class="chip" data-m="up">Más suben</button><button class="chip" data-m="down">Más bajan</button></div>
-      <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Precio</th><th>24h</th><th>Volumen 24h</th></tr></thead><tbody id="mkt"></tbody></table></div>
-    </section>
-    
+</html>
