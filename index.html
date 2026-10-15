@@ -260,8 +260,8 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
   <div class="grab"></div><button class="close" id="close">Cerrar</button>
   <div class="pair" style="font-family:var(--display);font-size:20px;font-weight:600" id="dSym"></div><div class="mono mute" id="dSub"></div>
   <div class="dl" id="dDl"></div>
-  <div style="display:flex;gap:6px;align-items:center;margin:0 0 8px"><span class="mute" style="font-size:12px;font-weight:600;margin-right:4px">Velas</span>
-    <button class="chip" data-tf="1h">1h</button><button class="chip" data-tf="4h">4h</button><button class="chip on" data-tf="1d">1D</button>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px"><span class="mute" style="font-size:12px;font-weight:600;margin-right:4px">Velas</span>
+    <button class="chip" data-tf="1m">1m</button><button class="chip" data-tf="15m">15m</button><button class="chip" data-tf="1h">1h</button><button class="chip" data-tf="4h">4h</button><button class="chip on" data-tf="1d">1D</button><button class="chip" data-tf="1w">1W</button>
     <span class="dim" id="tfInfo" style="font-size:12px;margin-left:auto"></span></div>
   <div id="cv2" class="lwc" style="height:320px"></div>
   <div class="legend"><span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span>▲▼ compras y ventas del bot</span></div>
@@ -437,25 +437,25 @@ function detalle(p){
 }
 let CH2=null, TF="1d", PSEL=null;
 async function velasTF(p){
-  if(TF==="1d"){ $("tfInfo").textContent="1 vela = 1 día"; return (P.velas||{})[p.s]||[]; }
+  const NOM={"1m":"1 minuto","15m":"15 minutos","1h":"1 hora","4h":"4 horas","1d":"1 día","1w":"1 semana"};
   $("tfInfo").textContent="cargando…";
-  try{ const r=await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${p.s.replace("/","")}&interval=${TF}&limit=${TF==="1h"?240:180}`);
-       if(!r.ok) throw 0; const k=await r.json();
-       $("tfInfo").textContent=`1 vela = ${TF==="1h"?"1 hora":"4 horas"} · Binance`;
+  try{ const r=await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${p.s.replace("/","")}&interval=${TF}&limit=${TF==="1w"?150:TF==="1d"?365:300}`);
+       if(!r.ok) throw 0; const k=await r.json(); if(!k.length) throw 0;
+       $("tfInfo").textContent=`1 vela = ${NOM[TF]} · Binance en vivo`;
        return k.map(x=>[Math.floor(x[0]/1000),+x[1],+x[2],+x[3],+x[4]]); }
-  catch(e){ $("tfInfo").textContent="Sin velas de "+TF+" para esta cripto; muestro 1D"; return (P.velas||{})[p.s]||[]; }
+  catch(e){ $("tfInfo").textContent=(TF==="1d"?"1 vela = 1 día · datos del bot":"Sin velas de "+NOM[TF]+" para esta cripto; muestro 1D"); return (P.velas||{})[p.s]||[]; }
 }
 async function velas(p){
   PSEL=p; const el=$("cv2"); if(CH2){CH2.remove();CH2=null;}
   const K=await velasTF(p);
   if(!window.LightweightCharts||!K.length){ el.innerHTML='<div class="empty">Sin velas disponibles todavía.</div>'; return; }
-  el.innerHTML=""; CH2=lwcBase(el,320); CH2.applyOptions({width:el.clientWidth,timeScale:{timeVisible:TF!=="1d"}});
+  el.innerHTML=""; CH2=lwcBase(el,320); CH2.applyOptions({width:el.clientWidth,timeScale:{timeVisible:!["1d","1w"].includes(TF),secondsVisible:false}});
   const cs=CH2.addCandlestickSeries({upColor:V("--up"),downColor:V("--down"),borderVisible:false,wickUpColor:V("--up"),wickDownColor:V("--down"),
     priceFormat:{type:"price",precision:p.px<1?6:p.px<100?4:2,minMove:p.px<1?0.000001:p.px<100?0.0001:0.01}});
   cs.setData(K.map(k=>({time:k[0],open:k[1],high:k[2],low:k[3],close:k[4]})));
   cs.createPriceLine({price:p.entrada,color:V("--mute"),lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"entrada"});
   cs.createPriceLine({price:p.stop,color:V("--down"),lineStyle:2,lineWidth:1,axisLabelVisible:true,title:"stop"});
-  const t0=K[0][0], dia=TF==="1h"?3600:TF==="4h"?14400:86400;
+  const t0=K[0][0], dia={"1m":60,"15m":900,"1h":3600,"4h":14400,"1d":86400,"1w":604800}[TF];
   cs.setMarkers((P.log||[]).filter(l=>l.s===p.s&&l.lado!=="veto"&&l.t>=t0).map(l=>({time:Math.floor(l.t/dia)*dia,position:l.lado==="buy"?"belowBar":"aboveBar",
     color:l.lado==="buy"?V("--up"):V("--down"),shape:l.lado==="buy"?"arrowUp":"arrowDown",text:l.lado==="buy"?"compra":"venta"})).sort((a,b)=>a.time-b.time));
   CH2.timeScale().fitContent();
@@ -487,6 +487,7 @@ function aplicarVivo(){
 }
 
 document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf; document.querySelectorAll("[data-tf]").forEach(x=>x.classList.toggle("on",x===b)); if(PSEL) velas(PSEL);});
+setInterval(()=>{ if(!$("sheet").hidden && PSEL && ["1m","15m"].includes(TF)) velas(PSEL); }, 30000);
 $("close").onclick=()=>$("sheet").hidden=true;
 $("sheet").onclick=e=>{if(e.target.id==="sheet")$("sheet").hidden=true};
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
