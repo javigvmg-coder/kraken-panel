@@ -104,6 +104,11 @@ td .pair small{font-family:var(--mono);font-size:10.5px;color:var(--dim);font-we
 .con p{margin:0;word-break:break-word}
 .con .k{color:var(--amber2)}
 .con .t{color:var(--dim)}
+.dia{padding:12px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.6}
+.dia:last-child{border-bottom:0}
+.dia h3{margin:0 0 4px;font-family:var(--display);font-size:13px;font-weight:600;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dia .l{color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-right:6px}
+.dia .an{margin:4px 0 0 0;padding:6px 10px;border-left:2px solid var(--line2);color:var(--mute);font-size:12px}
 .kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;padding:12px;font-size:12.5px}
 .kv span{color:var(--mute)} .kv b{font-family:var(--mono);font-weight:500;text-align:right}
 
@@ -224,6 +229,10 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     </section>
 
     <section class="card c12" data-p="bot">
+      <div class="ch"><h2>DIARIO DE DECISIONES</h2><span class="r cnt">qué analizó, qué propuso, qué se vetó y por qué · incluye los días sin operar</span></div>
+      <div id="diario"></div>
+    </section>
+    <section class="card c12" data-p="bot">
       <div class="ch"><h2>RAZONAMIENTO DEL BOT</h2><span class="r cnt" id="rT"></span></div>
       <div class="con" id="con"></div>
     </section>
@@ -285,7 +294,7 @@ function render(rapido){
   // barra
   const edad=(Date.now()/1000-P.t)/60;
   $("st").innerHTML=`<span class="dot ${edad>90?"old":""}"></span>${edad<90?"Bot activo · ciclo hace "+Math.round(edad)+" min":"Último ciclo hace "+(edad/60).toFixed(1)+" h"}`+
-    (P._vivo?` · <span style="color:var(--up)">● precios en vivo</span>`:"");
+    (P._vivo?` · <span style="color:var(--up)">● precios en vivo</span>`:"")+(P.pausa?` · <span style="color:var(--warn)">⏸ PAUSA manual activa</span>`:"");
   $("pMode").textContent=({paper:"PAPER",live:"REAL",detenido:"DETENIDO"})[P.modo]||P.modo; $("pMode").className="pill "+(P.modo==="live"?"live":"paper");
   $("pReg").textContent=P.regimen?"MERCADO ALCISTA":"MERCADO BAJISTA"; $("pReg").className="pill "+(P.regimen?"bull":"bear");
   // cifras
@@ -353,6 +362,14 @@ function render(rapido){
     ["Liquidez",f(P.cash)+" USDT"],["Capital inicial",f(ini)+" USDT"],["Stop por posición","3×ATR o −15%"],["Último ciclo",fecha(P.t)]];
   $("kv").innerHTML=KV.map(k=>`<span>${k[0]}</span><b>${k[1]}</b>`).join("");
   $("rT").textContent=fecha(P.t);
+  const DI=(P.diario||[]).slice().reverse();
+  $("diario").innerHTML=DI.length?DI.map(d=>{const ej=(d.ejecutadas||[]);
+    return `<div class="dia"><h3>${d.dia} <span class="pill ${d.regimen?"bull":"bear"}">${d.regimen?"ALCISTA":"BAJISTA"}</span>${d.pausa?'<span class="pill paper">PAUSA</span>':''}<span class="mono dim" style="font-size:11px;font-weight:400">cartera ${f(d.equity)} USDT</span></h3>
+     <div><span class="l">Top fuerza</span>${(d.top_momentum||[]).slice(0,4).map(x=>base(x[0])+" "+sg(x[1])).join(" · ")||"—"}</div>
+     <div><span class="l">Propuestas</span>${(d.propuestas||[]).map(base).join(", ")||"ninguna"} <span class="l" style="margin-left:10px">Vetos</span>${(d.vetos||[]).map(base).join(", ")||"ninguno"}</div>
+     <div><span class="l">Ejecutado</span>${ej.length?ej.map(x=>`<span class="${x.lado==="buy"?"up":"down"}">${x.lado==="buy"?"compra":"venta"} ${base(x.s)}</span>${x.pnl_pct!=null?" ("+sg(x.pnl_pct)+"%)":""}`).join(" · "):'<span class="mute">sin operar: la cartera ya era la mejor según las reglas</span>'}</div>
+     ${(d.analista||[]).map(a=>`<div class="an"><b style="color:var(--fg)">${base(a.simbolo)}</b> · riesgo ${a.riesgo}/10${a.veto?' · <b style="color:var(--warn)">VETO</b>':''}${a.confianza?" · confianza "+a.confianza:""} — ${a.razon||""}${a.invalidacion?`<br><span class="l">Invalidación</span>${a.invalidacion}`:""}</div>`).join("")}</div>`}).join(""):
+    `<div class="empty">El diario empieza con la próxima decisión diaria del bot (00:07 UTC).</div>`;
   $("con").innerHTML=(P.pensamiento||[]).map(t=>`<p><span class="t">›</span> `+t.replace(/(ALCISTA|BAJISTA|Stop loss|Rotación diaria|Analista IA|Veto del analista|VETO|Universo de hoy)/g,'<span class="k">$1</span>')+"</p>").join("");
   $("foot").innerHTML=`Datos del ${fecha(P.t)} · la página se recarga cada minuto y el bot se ejecuta cada hora<br>${P.modo==="live"?"":"Paper trading, sin dinero real · "}No es asesoramiento financiero`;
 }
