@@ -127,6 +127,22 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 .dl div{font-family:var(--mono)}
 .foot{color:var(--dim);font-size:11px;text-align:center;padding:18px 0 8px;line-height:1.6;font-family:var(--mono)}
 .err{background:rgba(246,70,93,.08);border:1px solid rgba(246,70,93,.35);border-radius:8px;padding:10px 12px;margin:10px 0}
+
+/* móvil: tablas como tarjetas */
+@media (max-width:640px){
+  table.cards thead{display:none}
+  table.cards,table.cards tbody{display:block}
+  table.cards tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:12px;border-bottom:1px solid var(--line)}
+  table.cards td{display:flex;flex-direction:column;align-items:flex-start;padding:0;border:0;text-align:left;white-space:normal;font-size:12.5px}
+  table.cards td[data-l]::before{content:attr(data-l);color:var(--dim);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+  table.cards td:first-child{grid-column:1/-1;flex-direction:row;align-items:center;gap:6px}
+  table.cards td.why{grid-column:1/-1;min-width:0}
+  table.cards td.empty{grid-column:1/-1}
+  table.cards tr.click{position:relative}
+  table.cards tr.click::after{content:"›";position:absolute;right:12px;top:10px;color:var(--dim);font-size:18px}
+  .tw{overflow-x:visible}
+  .scroll{max-height:none}
+}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
@@ -164,7 +180,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 
     <section class="card c8 show" data-p="resumen">
       <div class="ch"><h2>OPERACIONES ABIERTAS</h2><span class="r cnt" id="oN"></span></div>
-      <div class="tw"><table><thead><tr><th>Par</th><th>Cantidad</th><th>Entrada</th><th>Actual</th><th>Valor</th><th>Beneficio</th><th>Stop</th><th>Abierta</th></tr></thead><tbody id="open"></tbody></table></div>
+      <div class="tw"><table class="cards"><thead><tr><th>Par</th><th>Cantidad</th><th>Entrada</th><th>Actual</th><th>Valor</th><th>Beneficio</th><th>Stop</th><th>Abierta</th></tr></thead><tbody id="open"></tbody></table></div>
     </section>
     <section class="card c4" data-p="bot">
       <div class="ch"><h2>ESTADO DEL BOT</h2></div>
@@ -173,7 +189,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 
     <section class="card c8" data-p="ops">
       <div class="ch"><h2>OPERACIONES CERRADAS</h2><span class="r cnt" id="cN"></span></div>
-      <div class="tw scroll"><table><thead><tr><th>Par</th><th>Entrada</th><th>Salida</th><th>Beneficio</th><th>USDT</th><th>Duración</th><th>Cierre</th><th>Motivo</th></tr></thead><tbody id="closed"></tbody></table></div>
+      <div class="tw scroll"><table class="cards"><thead><tr><th>Par</th><th>Entrada</th><th>Salida</th><th>Beneficio</th><th>USDT</th><th>Duración</th><th>Cierre</th><th>Motivo</th></tr></thead><tbody id="closed"></tbody></table></div>
     </section>
     <section class="card c4" data-p="ops">
       <div class="ch"><h2>RENDIMIENTO POR CRIPTO</h2></div>
@@ -186,7 +202,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     </section>
     <section class="card c6" data-p="ops">
       <div class="ch"><h2>REGISTRO DE ÓRDENES</h2><span class="r cnt" id="lN"></span></div>
-      <div class="tw scroll"><table><thead><tr><th>Fecha</th><th>Lado</th><th>Par</th><th>Precio</th><th>Motivo</th></tr></thead><tbody id="log"></tbody></table></div>
+      <div class="tw scroll"><table class="cards"><thead><tr><th>Fecha</th><th>Lado</th><th>Par</th><th>Precio</th><th>Motivo</th></tr></thead><tbody id="log"></tbody></table></div>
     </section>
 
     <section class="card c12" data-p="bot">
@@ -277,17 +293,17 @@ function render(){
   $("oN").textContent=ps.length;
   $("open").innerHTML=ps.length?ps.map((p,i)=>{const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1, m=p.px/p.stop-1, w=Math.max(4,Math.min(100,m/.2*100));
     return `<tr class="click" data-i="${i}"><td><span class="pair">${base(p.s)}<small>/USDT</small></span><span class="tag">${p.tipo==="val"?"VALOR":"MOMENTUM"}</span></td>
-    <td>${f(p.qty,4)}</td><td>${px(p.entrada)}</td><td>${px(p.px)}</td><td>${f(v)}</td>
-    <td class="${cls(r)}">${pc(r)}<div class="dim" style="font-size:10.5px">${sg(v-c)} USDT</div></td>
-    <td>${px(p.stop)}<span class="sbar"><i style="width:${w}%;background:${m<.05?V("--down"):V("--amber")}"></i></span></td>
-    <td class="mute">${p.t?dur(Date.now()/1000-p.t):"—"}</td></tr>`}).join(""):
+    <td data-l="Cantidad">${f(p.qty,4)}</td><td data-l="Entrada">${px(p.entrada)}</td><td data-l="Actual">${px(p.px)}</td><td data-l="Valor">${f(v)}</td>
+    <td data-l="Beneficio" class="${cls(r)}">${pc(r)}<div class="dim" style="font-size:10.5px">${sg(v-c)} USDT</div></td>
+    <td data-l="Stop">${px(p.stop)}<span class="sbar"><i style="width:${w}%;background:${m<.05?V("--down"):V("--amber")}"></i></span></td>
+    <td data-l="Abierta" class="mute">${p.t?dur(Date.now()/1000-p.t):"—"}</td></tr>`}).join(""):
     `<tr><td colspan="8" class="empty">Sin operaciones abiertas. ${P.regimen?"El bot decide al cierre de la vela diaria.":"Mercado bajista: el capital está protegido en USDT."}</td></tr>`;
   document.querySelectorAll("#open tr.click").forEach(r=>r.onclick=()=>detalle(ps[r.dataset.i]));
   // cerradas
   $("cN").textContent=T.length;
-  $("closed").innerHTML=T.length?T.map(t=>`<tr><td><span class="pair">${base(t.s)}</span></td><td>${px(t.ent)}</td><td>${px(t.sal)}</td>
-    <td class="${cls(t.pct)}">${pc(t.pct)}</td><td class="${cls(t.usdt)}">${sg(t.usdt)}</td><td class="mute">${t.t0?dur(t.t1-t.t0):"—"}</td>
-    <td class="mute">${fecha(t.t1)}</td><td class="why">${t.motivo}</td></tr>`).join(""):`<tr><td colspan="8" class="empty">Todavía no hay operaciones cerradas. Aparecerán aquí con su beneficio en cuanto el bot venda.</td></tr>`;
+  $("closed").innerHTML=T.length?T.map(t=>`<tr><td><span class="pair">${base(t.s)}</span></td><td data-l="Entrada">${px(t.ent)}</td><td data-l="Salida">${px(t.sal)}</td>
+    <td data-l="Beneficio" class="${cls(t.pct)}">${pc(t.pct)}</td><td data-l="USDT" class="${cls(t.usdt)}">${sg(t.usdt)}</td><td data-l="Duración" class="mute">${t.t0?dur(t.t1-t.t0):"—"}</td>
+    <td data-l="Cierre" class="mute">${fecha(t.t1)}</td><td class="why">${t.motivo}</td></tr>`).join(""):`<tr><td colspan="8" class="empty">Todavía no hay operaciones cerradas. Aparecerán aquí con su beneficio en cuanto el bot venda.</td></tr>`;
   // por cripto
   const G={}; T.forEach(t=>{const g=G[t.s]??={n:0,w:0,u:0}; g.n++; if((t.usdt??0)>0)g.w++; g.u+=t.usdt??0;});
   const gk=Object.entries(G).sort((a,b)=>b[1].u-a[1].u);
@@ -302,8 +318,8 @@ function render(){
   // registro
   const L=(P.log||[]).slice().reverse(); $("lN").textContent=L.length;
   const col={buy:V("--up"),sell:V("--down"),veto:V("--warn")};
-  $("log").innerHTML=L.length?L.map(l=>`<tr><td class="mute">${fecha(l.t)}</td><td><span class="side" style="color:${col[l.lado]}">${({buy:"COMPRA",sell:"VENTA",veto:"VETO"})[l.lado]||l.lado}</span></td>
-    <td><span class="pair">${base(l.s)}</span></td><td>${px(l.px)}</td><td class="why">${l.motivo}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">Sin órdenes.</td></tr>`;
+  $("log").innerHTML=L.length?L.map(l=>`<tr><td class="mute">${fecha(l.t)}</td><td data-l="Lado"><span class="side" style="color:${col[l.lado]}">${({buy:"COMPRA",sell:"VENTA",veto:"VETO"})[l.lado]||l.lado}</span></td>
+    <td data-l="Par"><span class="pair">${base(l.s)}</span></td><td data-l="Precio">${px(l.px)}</td><td class="why">${l.motivo}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">Sin órdenes.</td></tr>`;
   // estado
   const prox=P.proximo_rebalanceo?Math.max(0,(P.proximo_rebalanceo-Date.now()/1000)/3600):null;
   const KV=[["Modo",P.modo==="live"?"Dinero real":"Paper (simulado)"],["Exchange","KuCoin spot"],["Estrategia","Momentum top 2 + valor vs BTC"],
