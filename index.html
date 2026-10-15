@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0907">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kraken Bot">
+<title>Kraken Bot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230b0907'/><circle cx='32' cy='32' r='17' fill='none' stroke='%23ff8a1f' stroke-width='5'/><circle cx='32' cy='32' r='6' fill='%23ff8a1f'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%230b0907'/><circle cx='32' cy='32' r='17' fill='none' stroke='%23ff8a1f' stroke-width='5'/><circle cx='32' cy='32' r='6' fill='%23ff8a1f'/></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: app de exchange móvil — cabecera de saldo, contenido por pestañas, barra de navegación inferior fija. Tema oscuro único. */
+:root{
+  color-scheme:dark;
+  --bg:#0b0907; --panel:#15110d; --panel2:#1d1712; --line:#2a2119; --line2:#3d2e21;
+  --fg:#f1e7db; --mute:#a08c79; --dim:#6f5d4d;
+  --amber:#ff8a1f; --amber2:#ffb366;
+  --up:#3ecf8e; --down:#f6465d; --warn:#f0b90b;
+  --display:"Chakra Petch",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:13px;min-height:100%}
+body{padding:env(safe-area-inset-top,0) 0 calc(64px + env(safe-area-inset-bottom,0))}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+.up{color:var(--up)} .down{color:var(--down)} .mute{color:var(--mute)}
+/* cabecera */
+.top{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+.logo{width:28px;height:28px;border-radius:50%;border:2.5px solid var(--amber);display:grid;place-items:center;flex:none}
+.logo i{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.top h1{font-family:var(--display);font-size:15px;letter-spacing:.14em;margin:0;font-weight:700}
+.pill{font-size:10px;letter-spacing:.12em;padding:3px 7px;border-radius:3px;border:1px solid;font-weight:600;white-space:nowrap}
+.pill.paper{color:var(--warn);border-color:rgba(240,185,11,.4);background:rgba(240,185,11,.08)}
+.pill.live{color:var(--up);border-color:rgba(62,207,142,.4);background:rgba(62,207,142,.08)}
+.pill.bull{color:var(--up);border-color:rgba(62,207,142,.35)} .pill.bear{color:var(--down);border-color:rgba(246,70,93,.35)}
+.top .r{margin-left:auto;display:flex;gap:6px}
+/* saldo */
+.bal{padding:10px 0 4px}
+.bal .lbl{color:var(--mute);font-size:11px;letter-spacing:.08em}
+.bal .big{font-family:var(--display);font-size:36px;font-weight:600;margin:2px 0;line-height:1.1}
+.bal .big small{font-size:16px;color:var(--mute);margin-left:4px}
+.bal .chg{font-size:13px;display:flex;flex-wrap:wrap;gap:4px 14px}
+/* rejilla de datos */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+.kpi span{display:block;color:var(--dim);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase}
+.kpi b{font-family:var(--display);font-size:15px;font-weight:600;display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.kpis{grid-template-columns:repeat(2,1fr)}}
+/* tarjetas */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:10px 0;min-width:0}
+.ch{display:flex;align-items:center;gap:8px;padding:11px 12px 8px}
+.ch h2{font-family:var(--display);font-size:12px;letter-spacing:.16em;margin:0;font-weight:600}
+.ch .r{margin-left:auto;display:flex;gap:4px}
+.chip{font:inherit;font-size:11px;background:transparent;color:var(--mute);border:1px solid var(--line2);border-radius:5px;padding:4px 8px;cursor:pointer}
+.chip.on{color:var(--bg);background:var(--amber);border-color:var(--amber);font-weight:600}
+.chip:focus-visible,.tab:focus-visible,.row:focus-visible{outline:2px solid var(--amber2);outline-offset:2px}
+canvas{display:block;width:100%}
+.legend{display:flex;gap:14px;padding:0 12px 10px;font-size:11px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:2px;vertical-align:3px;margin-right:5px}
+/* filas tipo exchange */
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:11px 12px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;color:inherit;font:inherit}
+.row:hover{background:var(--panel2)}
+.sym{font-family:var(--display);font-size:16px;font-weight:600}
+.sym small{font-family:var(--mono);font-size:11px;color:var(--dim);font-weight:400}
+.tag{font-size:9.5px;letter-spacing:.1em;padding:2px 5px;border-radius:3px;margin-left:6px;vertical-align:2px;background:var(--panel2);color:var(--amber2);border:1px solid var(--line2)}
+.rr{text-align:right}
+.sub{font-size:11px;color:var(--mute)}
+.bar{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:7px;grid-column:1/-1;position:relative}
+.bar i{position:absolute;top:0;bottom:0;left:0;border-radius:3px}
+.empty{padding:16px 12px;color:var(--mute);line-height:1.6;border-top:1px solid var(--line)}
+/* ranking */
+.rk{display:grid;grid-template-columns:22px 1fr 62px 62px 74px;gap:4px 6px;align-items:center;padding:9px 12px;border-top:1px solid var(--line)}
+.rk.h{color:var(--dim);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding-top:4px;padding-bottom:6px}
+.rk .n{color:var(--dim)} .rk .r2{text-align:right}
+.cut{padding:4px 12px;color:var(--amber2);font-size:9.5px;letter-spacing:.14em;border-top:1px dashed var(--line2)}
+/* consola */
+.con{padding:4px 12px 12px;line-height:1.7;font-size:12px}
+.con p{margin:0 0 4px;word-break:break-word}
+.con .k{color:var(--amber2)}
+/* navegación inferior */
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(14,11,8,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0));display:flex;justify-content:center;z-index:5}
+nav .in{display:flex;width:100%;max-width:520px}
+.tab{flex:1;background:none;border:0;color:var(--dim);font:inherit;font-size:10.5px;letter-spacing:.06em;padding:6px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
+.tab.on{color:var(--amber)}
+section[hidden]{display:none}
+/* hoja de detalle */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet .in{background:var(--panel);border-top:1px solid var(--line2);border-radius:16px 16px 0 0;width:100%;max-width:860px;max-height:92vh;overflow:auto;padding:8px 16px calc(16px + env(safe-area-inset-bottom,0))}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line2);margin:4px auto 10px}
+.close{float:right;background:none;border:1px solid var(--line2);color:var(--mute);border-radius:6px;font:inherit;padding:4px 10px;cursor:pointer}
+.dl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.dl div span{display:block;color:var(--dim);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase}
+.foot{color:var(--dim);font-size:10.5px;text-align:center;padding:14px 0 6px;line-height:1.6}
+.err{background:rgba(246,70,93,.08);border:1px solid rgba(246,70,93,.35);color:var(--fg);border-radius:8px;padding:10px 12px;margin:10px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo"><i></i></div>
+    <h1>KRAKEN BOT</h1>
+    <div class="r"><span id="pMode" class="pill paper">PAPER</span><span id="pReg" class="pill">—</span></div>
+  </header>
+  <div id="err" class="err" hidden></div>
+
+  <!-- INICIO -->
+  <section id="s-inicio">
+    <div class="bal">
+      <div class="lbl">Valor total de la cartera (USDT)</div>
+      <div class="big num" id="bal">—</div>
+      <div class="chg num"><span id="pnl">—</span><span id="vsbtc" class="mute"></span></div>
+    </div>
+    <div class="kpis num">
+      <div class="kpi"><span>Invertido</span><b id="kInv">—</b></div>
+      <div class="kpi"><span>Liquidez</span><b id="kCash">—</b></div>
+      <div class="kpi"><span>Caída máx.</span><b id="kDd">—</b></div>
+      <div class="kpi"><span>Operaciones</span><b id="kOps">—</b></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h2>RENDIMIENTO</h2>
+        <div class="r" id="rng"><button class="chip" data-r="1">24h</button><button class="chip" data-r="7">7d</button><button class="chip" data-r="30">30d</button><button class="chip on" data-r="0">Todo</button></div></div>
+      <canvas id="cv" height="210"></canvas>
+      <div class="legend"><span><i style="background:var(--amber)"></i>Bot</span><span><i style="background:var(--mute)"></i>Comprar BTC y mantener</span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h2>POSICIONES</h2><span class="r sub" id="posN"></span></div>
+      <div id="pos"></div>
+    </div>
+  </section>
+
+  <!-- MERCADO -->
+  <section id="s-mercado" hidden>
+    <div class="card">
+      <div class="ch"><h2>RANKING DE FUERZA</h2><span class="r sub" id="uniN"></span></div>
+      <div class="rk h"><span>#</span><span>Cripto</span><span class="r2">Fuerza</span><span class="r2">vs BTC</span><span class="r2">Precio</span></div>
+      <div id="rk"></div>
+    </div>
+    <p class="foot">El bot compra las 2 con más fuerza y mantiene mientras sigan en el top 4.<br>"vs BTC" &lt; −2 = anormalmente barata frente a BTC (motor de valor).</p>
+  </section>
+
+  <!-- OPERACIONES -->
+  <section id="s-ops" hidden>
+    <div class="card"><div class="ch"><h2>HISTORIAL DE OPERACIONES</h2><span class="r sub" id="opsN"></span></div><div id="ops"></div></div>
+  </section>
+
+  <!-- CEREBRO -->
+  <section id="s-cerebro" hidden>
+    <div class="card"><div class="ch"><h2>RAZONAMIENTO DEL ÚLTIMO CICLO</h2><span class="r sub" id="cT"></span></div><div class="con" id="con"></div></div>
+    <div class="card"><div class="ch"><h2>ESTRATEGIA</h2></div><div class="con mute">
+      <p>Universo: las 25 criptos con más volumen de KuCoin, revisado cada día.</p>
+      <p>Momentum: compra las 2 más fuertes y rota cuando caen fuera del top 4.</p>
+      <p>Valor: con la liquidez libre, compra criptos anormalmente baratas frente a BTC.</p>
+      <p>Protección: si BTC cae bajo su media de 100 días, todo a USDT. Stop por posición: 3×ATR o −15%.</p>
+      <p>Analista: cada noche revisa noticias y puede vetar compras con riesgos concretos.</p></div></div>
+  </section>
+
+  <p class="foot" id="foot">Cargando…</p>
+</div>
+
+<nav><div class="in">
+  <button class="tab on" data-s="inicio"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9H3z"/></svg>Cartera</button>
+  <button class="tab" data-s="mercado"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Mercado</button>
+  <button class="tab" data-s="ops"><svg viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>Operaciones</button>
+  <button class="tab" data-s="cerebro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Cerebro</button>
+</div></nav>
+
+<div class="sheet" id="sheet" hidden><div class="in">
+  <div class="grab"></div><button class="close" id="close">Cerrar</button>
+  <div class="sym" id="dSym"></div><div class="sub" id="dSub"></div>
+  <div class="dl num" id="dDl"></div>
+  <canvas id="cv2" height="260"></canvas>
+  <div class="legend"><span><i style="background:var(--mute)"></i>Entrada</span><span><i style="background:var(--down)"></i>Stop</span><span><i style="background:var(--amber)"></i>Ahora</span></div>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const V=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const f=(n,d=2)=>n==null||isNaN(n)?"—":Number(n).toLocaleString("es-ES",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pc=(x,d=2)=>(x>=0?"+":"")+f(x*100,d)+"%";
+const cls=x=>x>=0?"up":"down";
+const px=n=>n>=100?f(n,2):n>=1?f(n,4):Number(n).toPrecision(4);
+const base=s=>s.split("/")[0];
+const fecha=t=>new Date(t*1000).toLocaleString("es-ES",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+let P=null, rango=0;
+
+async function cargar(){
+  try{
+    const r=await fetch("panel.json?"+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    P=await r.json(); $("err").hidden=true; render();
+  }catch(e){
+    $("err").hidden=false; $("err").textContent="No se pudieron cargar los datos del bot ("+e.message+"). Se reintentará en 1 minuto.";
+  }
+}
+
+function render(){
+  const ini=P.capital_inicial, eq=P.equity, H=P.historial||[];
+  $("pMode").textContent=({paper:"PAPER",live:"REAL",detenido:"DETENIDO"})[P.modo]||P.modo;
+  $("pMode").className="pill "+(P.modo==="live"?"live":"paper");
+  $("pReg").textContent=P.regimen?"ALCISTA":"BAJISTA"; $("pReg").className="pill "+(P.regimen?"bull":"bear");
+  $("bal").innerHTML=f(eq)+"<small>USDT</small>";
+  const pnl=eq/ini-1;
+  $("pnl").innerHTML=`<span class="${cls(pnl)}">${eq-ini>=0?"+":""}${f(eq-ini)} (${pc(pnl)})</span> <span class="mute">desde el inicio</span>`;
+  const hb=H.filter(h=>h[2]); if(hb.length>1){const b=hb[hb.length-1][2]/hb[0][2]-1, e=hb[hb.length-1][1]/hb[0][1]-1;
+    $("vsbtc").innerHTML=`BTC mismo periodo <span class="${cls(b)}">${pc(b)}</span>`;}
+  const inv=(P.posiciones||[]).reduce((a,p)=>a+p.qty*p.px,0);
+  $("kInv").textContent=f(inv); $("kCash").textContent=f(P.cash);
+  let mx=-1e18,dd=0; H.forEach(h=>{mx=Math.max(mx,h[1]); dd=Math.min(dd,h[1]/mx-1)}); $("kDd").textContent=pc(dd,1); $("kDd").className=dd<-.2?"down":"";
+  $("kOps").textContent=(P.log||[]).filter(l=>l.lado!=="veto").length;
+  curva();
+  // posiciones
+  const ps=P.posiciones||[]; $("posN").textContent=ps.length+" abiertas";
+  $("pos").innerHTML=ps.length?ps.map((p,i)=>{const r=p.px/p.entrada-1, val=p.qty*p.px, marg=p.px/p.stop-1;
+    const w=Math.max(0,Math.min(100,(p.px-p.stop)/(p.max-p.stop||1)*100));
+    return `<button class="row" data-i="${i}"><div><span class="sym">${base(p.s)}</span><span class="tag">${p.tipo==="val"?"VALOR":"MOMENTUM"}</span>
+      <div class="sub num">${f(p.qty,4)} · entrada ${px(p.entrada)}</div></div>
+      <div class="rr num"><div class="sym ${cls(r)}" style="font-size:15px">${pc(r)}</div><div class="sub">${f(val)} USDT</div></div>
+      <div class="bar" title="distancia al stop"><i style="width:${w}%;background:${marg<.05?V("--down"):V("--amber")}"></i></div>
+      <div class="sub num" style="grid-column:1/-1">Stop ${px(p.stop)} · margen ${pc(marg,1)}</div></button>`}).join(""):
+    `<div class="empty">Sin posiciones abiertas. ${P.regimen?"Esperando la próxima decisión diaria.":"Mercado bajista: el capital está protegido en USDT."}</div>`;
+  document.querySelectorAll("#pos .row").forEach(b=>b.onclick=()=>detalle(ps[b.dataset.i]));
+  // mercado
+  const uni=new Set(P.universo||[]); $("uniN").textContent=(uni.size||P.ranking.length)+" criptos";
+  const held=new Set(ps.map(p=>p.s)); let html="";
+  P.ranking.filter(r=>!uni.size||uni.has(r.s)).forEach((r,i)=>{ if(i===2)html+=`<div class="cut">— COMPRA HASTA AQUÍ · MANTIENE HASTA EL 4 —</div>`; if(i===4)html+=`<div class="cut" style="color:var(--dim)">—</div>`;
+    const s=r.score;
+    html+=`<div class="rk num"><span class="n">${i+1}</span><span class="sym" style="font-size:14px">${base(r.s)}${held.has(r.s)?' <span class="tag">EN CARTERA</span>':''}</span>
+    <span class="r2 ${s==null?'mute':cls(s)}">${s==null?"—":(s>=0?"+":"")+s.toFixed(2)}</span>
+    <span class="r2 ${r.z!=null&&r.z<-2?'up':'mute'}">${r.z==null?"—":r.z.toFixed(1)}</span><span class="r2">${px(r.px)}</span></div>`});
+  $("rk").innerHTML=html;
+  // operaciones
+  const L=(P.log||[]).slice().reverse(); $("opsN").textContent=L.length;
+  $("ops").innerHTML=L.length?L.map(l=>`<div class="row" style="cursor:default"><div><span class="sym" style="font-size:14px">${base(l.s)}</span>
+     <span class="tag" style="color:${l.lado==="buy"?V("--up"):l.lado==="sell"?V("--down"):V("--warn")}">${({buy:"COMPRA",sell:"VENTA",veto:"VETO"})[l.lado]||l.lado}</span>
+     <div class="sub">${l.motivo}</div></div><div class="rr num"><div>${px(l.px)}</div><div class="sub">${fecha(l.t)}</div></div></div>`).join(""):`<div class="empty">Aún no hay operaciones.</div>`;
+  // cerebro
+  $("cT").textContent=fecha(P.t);
+  $("con").innerHTML=(P.pensamiento||[]).map(t=>"<p>"+t.replace(/(ALCISTA|BAJISTA|Stop loss|Rotación diaria|Analista IA|Veto del analista|VETO|Universo de hoy)/g,'<span class="k">$1</span>')+"</p>").join("");
+  const edad=(Date.now()/1000-P.t)/60;
+  $("foot").innerHTML=`Actualizado ${fecha(P.t)} (${edad<90?"hace "+Math.round(edad)+" min":"hace "+(edad/60).toFixed(1)+" h"}) · el bot se ejecuta cada hora<br>Paper trading: sin dinero real. No es asesoramiento financiero.`;
+}
+
+function curva(){
+  const cv=$("cv"), dpr=devicePixelRatio||1, W=cv.clientWidth, Hh=210; cv.width=W*dpr; cv.height=Hh*dpr;
+  const g=cv.getContext("2d"); g.scale(dpr,dpr); g.clearRect(0,0,W,Hh);
+  let H=(P.historial||[]); if(rango){const lim=P.t-rango*86400; H=H.filter(h=>h[0]>=lim);}
+  if(H.length<2){g.fillStyle=V("--mute");g.font="12px "+V("--mono");g.fillText("Aún no hay suficiente historial.",12,30);return;}
+  const e0=H[0][1], hb=H.filter(h=>h[2]), b0=hb.length?hb[0][2]:null;
+  const ser=H.map(h=>h[1]/e0-1), bser=H.map(h=>h[2]&&b0?h[2]/b0-1:null);
+  const all=ser.concat(bser.filter(x=>x!=null)); let mn=Math.min(0,...all), mx=Math.max(0,...all); const pad=(mx-mn)*.12||.01; mn-=pad; mx+=pad;
+  const L=10,R=52,T=10,B=22, t0=H[0][0], t1=H[H.length-1][0];
+  const X=t=>L+(t-t0)/(t1-t0||1)*(W-L-R), Y=v=>T+(1-(v-mn)/(mx-mn))*(Hh-T-B);
+  g.font="10px "+V("--mono"); g.textBaseline="middle"; g.textAlign="left";
+  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=Y(v); g.strokeStyle=V("--line"); g.lineWidth=1; g.beginPath(); g.moveTo(L,y); g.lineTo(W-R,y); g.stroke(); g.fillStyle=V("--dim"); g.fillText(pc(v,1),W-R+6,y);}
+  g.textAlign="center"; g.textBaseline="top"; [0,.5,1].forEach(k=>{const t=t0+(t1-t0)*k; g.fillStyle=V("--dim"); g.fillText(new Date(t*1000).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}),Math.min(Math.max(X(t),L+22),W-R-22),Hh-B+6);});
+  g.setLineDash([3,3]); g.strokeStyle=V("--line2"); g.beginPath(); g.moveTo(L,Y(0)); g.lineTo(W-R,Y(0)); g.stroke(); g.setLineDash([]);
+  // BTC
+  g.beginPath(); let st=false; H.forEach((h,i)=>{if(bser[i]==null)return; st?g.lineTo(X(h[0]),Y(bser[i])):g.moveTo(X(h[0]),Y(bser[i])); st=true}); g.strokeStyle=V("--mute"); g.lineWidth=1.3; g.stroke();
+  // bot
+  const last=ser[ser.length-1], col=last>=0?V("--up"):V("--down");
+  const gr=g.createLinearGradient(0,T,0,Hh-B); gr.addColorStop(0,"rgba(255,138,31,.28)"); gr.addColorStop(1,"rgba(255,138,31,0)");
+  g.beginPath(); H.forEach((h,i)=>i?g.lineTo(X(h[0]),Y(ser[i])):g.moveTo(X(h[0]),Y(ser[i]))); g.lineTo(X(t1),Y(mn)); g.lineTo(X(t0),Y(mn)); g.fillStyle=gr; g.fill();
+  g.beginPath(); H.forEach((h,i)=>i?g.lineTo(X(h[0]),Y(ser[i])):g.moveTo(X(h[0]),Y(ser[i]))); g.strokeStyle=V("--amber"); g.lineWidth=2; g.stroke();
+  g.fillStyle=V("--amber"); g.beginPath(); g.arc(X(t1),Y(last),3.5,0,7); g.fill();
+  g.fillStyle=col; g.textAlign="right"; g.textBaseline="bottom"; g.font="600 12px "+V("--mono"); g.fillText(pc(last),W-R-4,Y(last)-6);
+}
+
+function detalle(p){
+  $("sheet").hidden=false;
+  const r=p.px/p.entrada-1;
+  $("dSym").innerHTML=`${base(p.s)}<small>/USDT</small> <span class="tag">${p.tipo==="val"?"VALOR":"MOMENTUM"}</span>`;
+  $("dSub").innerHTML=`<span class="${cls(r)}">${pc(r)}</span> · ${f(p.qty*p.px)} USDT`;
+  $("dDl").innerHTML=`<div><span>Entrada</span>${px(p.entrada)}</div><div><span>Ahora</span>${px(p.px)}</div><div><span>Stop</span><b class="down">${px(p.stop)}</b></div>
+    <div><span>Máximo</span>${px(p.max)}</div><div><span>Cantidad</span>${f(p.qty,4)}</div><div><span>Margen stop</span>${pc(p.px/p.stop-1,1)}</div>`;
+  requestAnimationFrame(()=>velas(p));
+}
+function velas(p){
+  const cv=$("cv2"), dpr=devicePixelRatio||1, W=cv.clientWidth, Hh=260; cv.width=W*dpr; cv.height=Hh*dpr;
+  const g=cv.getContext("2d"); g.scale(dpr,dpr); g.clearRect(0,0,W,Hh);
+  const K=((P.velas||{})[p.s]||[]).slice(-60);
+  if(!K.length){g.fillStyle=V("--mute");g.font="12px "+V("--mono");g.fillText("Sin velas disponibles todavía.",12,30);return;}
+  const lv=[p.entrada,p.stop,p.px]; let mn=Math.min(...K.map(k=>k[3]),...lv), mx=Math.max(...K.map(k=>k[2]),...lv); const pad=(mx-mn)*.06; mn-=pad; mx+=pad;
+  const L=6,R=62,T=8,B=20, n=K.length, cw=(W-L-R)/n;
+  const Y=v=>T+(1-(v-mn)/(mx-mn))*(Hh-T-B);
+  g.font="10px "+V("--mono"); g.textBaseline="middle";
+  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=Y(v); g.strokeStyle=V("--line"); g.beginPath(); g.moveTo(L,y); g.lineTo(W-R,y); g.stroke(); g.fillStyle=V("--dim"); g.textAlign="left"; g.fillText(px(v),W-R+6,y);}
+  K.forEach((k,i)=>{const x=L+i*cw+cw/2, up=k[4]>=k[1], c=up?V("--up"):V("--down"); g.strokeStyle=c; g.fillStyle=c;
+    g.beginPath(); g.moveTo(x,Y(k[2])); g.lineTo(x,Y(k[3])); g.stroke();
+    const y1=Y(Math.max(k[1],k[4])), y2=Y(Math.min(k[1],k[4])); g.fillRect(x-cw*.35,y1,cw*.7,Math.max(1,y2-y1));});
+  [[p.entrada,V("--mute"),"entrada"],[p.stop,V("--down"),"stop"],[p.px,V("--amber"),"ahora"]].forEach(([v,c,t])=>{
+    g.setLineDash(t==="ahora"?[]:[4,3]); g.strokeStyle=c; g.lineWidth=1.2; g.beginPath(); g.moveTo(L,Y(v)); g.lineTo(W-R,Y(v)); g.stroke(); g.setLineDash([]);
+    g.fillStyle=c; g.fillRect(W-R+2,Y(v)-8,R-4,16); g.fillStyle=V("--bg"); g.textAlign="left"; g.fillText(px(v),W-R+6,Y(v));});
+  g.fillStyle=V("--dim"); g.textAlign="center"; g.textBaseline="top";
+  [0,Math.floor(n/2),n-1].forEach(i=>g.fillText(new Date(K[i][0]*1000).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}),Math.min(Math.max(L+i*cw+cw/2,24),W-R-24),Hh-B+5));
+}
+
+$("close").onclick=()=>$("sheet").hidden=true;
+$("sheet").onclick=e=>{if(e.target.id==="sheet")$("sheet").hidden=true};
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));
+  ["inicio","mercado","ops","cerebro"].forEach(s=>$("s-"+s).hidden=s!==b.dataset.s);
+  if(b.dataset.s==="inicio"&&P) curva(); scrollTo(0,0);
+});
+document.querySelectorAll("#rng .chip").forEach(b=>b.onclick=()=>{rango=+b.dataset.r; document.querySelectorAll("#rng .chip").forEach(x=>x.classList.toggle("on",x===b)); curva();});
+addEventListener("resize",()=>P&&curva());
+cargar(); setInterval(cargar,60000);
+</script>
+</body>
+</html>
