@@ -209,6 +209,30 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
 .lwc{width:100%;position:relative}
 .foot{color:var(--dim);font-size:12px;text-align:center;padding:22px 0 8px;line-height:1.6}
 .err{background:#FDECEC;border:1px solid #F6C6C8;border-radius:12px;padding:12px 14px;margin:10px 0}
+.lg{width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:8px;flex:none;object-fit:contain;background:#fff;box-shadow:0 0 0 1px var(--line)}
+.lg.f{display:inline-grid;place-items:center;font-size:9.5px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.tape .lg{width:18px;height:18px;margin-right:6px}
+.sem{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}
+@media (max-width:1100px){.sem{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.sem{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.sl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);min-width:0}
+.sl .h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--mute)}
+.sl .v{font-size:16px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl .d{font-size:11.5px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luz{width:11px;height:11px;border-radius:50%;flex:none}
+.luz.g{background:#10B981;box-shadow:0 0 0 4px rgba(16,185,129,.15)} .luz.a{background:#F59E0B;box-shadow:0 0 0 4px rgba(245,158,11,.15)}
+.luz.r{background:#E5484D;box-shadow:0 0 0 4px rgba(229,72,77,.15)} .luz.n{background:#CBD2DE;box-shadow:0 0 0 4px rgba(203,210,222,.25)}
+.sem-cell{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:12.5px}
+.spark{width:110px;height:30px;vertical-align:middle}
+.tool{padding:6px 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.tool{grid-template-columns:1fr}}
+.tool .box{background:var(--bg2);border-radius:14px;padding:14px}
+.tool h3{margin:0 0 10px;font-size:14px;font-weight:700}
+.tool label{display:block;font-size:12px;color:var(--mute);font-weight:600;margin:8px 0 4px}
+.tool input,.tool select{width:100%;padding:9px 11px;border:1px solid var(--line2);border-radius:10px;font:inherit;font-size:14px;background:#fff;color:var(--fg)}
+.tool .out{margin-top:12px;font-size:14px;line-height:1.6}
+.tool .out b{font-size:18px}
+.wt{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
@@ -225,6 +249,7 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
   <div id="err" class="err" hidden></div>
 
   <div data-p="resumen" class="show">
+    <div class="sem" id="sem"></div>
     <div class="two">
       <div class="pc" data-go="bot"><div class="k">Bot de trading <span class="pill paper" style="font-size:10.5px">Simulación</span></div><div class="v" id="gBot">—</div><div class="s" id="gBotS">—</div></div>
       <div class="pc" data-go="dca"><div class="k">Cartera DCA ISO 20022 <span class="pill live" style="font-size:10.5px">Tus XRP</span></div><div class="v" id="gDca">—</div><div class="s" id="gDcaS">—</div></div>
@@ -300,8 +325,21 @@ nav .in{display:flex;max-width:520px;margin:0 auto}
     </section>
     <section class="card c12" data-p="dca">
       <div class="ch"><h2>Radar ISO 20022</h2><span class="r cnt">zonas de compra por tramos · ~<span id="tramoEur">100</span> € por tramo</span></div>
-      <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Precio</th><th>24h</th><th>7d</th><th>Desde máx. 1 año</th><th>Rango 3 años</th><th>RSI semanal</th><th>vs media 200d</th><th>Estado</th></tr></thead><tbody id="dcaWatch"></tbody></table></div>
+      <div class="tw"><table class="cards"><thead><tr><th>Activo</th><th>Precio</th><th>24h</th><th>7d</th><th>Desde máx. 1 año</th><th>Rango 3 años</th><th>RSI semanal</th><th>vs media 200d</th><th>60 días</th><th>Semáforo</th></tr></thead><tbody id="dcaWatch"></tbody></table></div>
       <div class="legend" style="flex-wrap:wrap"><span>Tramo 1: RSI semanal &lt; 40, o bajo la media de 200 días con caída &gt; 30%</span><span>Tramo 2: −15% desde el tramo 1</span><span>Tramo 3: −28%</span><span>La compra la decides tú</span></div>
+    </section>
+    <section class="card c12" data-p="dca">
+      <div class="ch"><h2>Herramientas</h2></div>
+      <div class="tool">
+        <div class="box"><h3>Calculadora de compra DCA</h3>
+          <label for="tCaja">Caja disponible (USD)</label><input id="tCaja" type="number" min="0" step="10">
+          <label for="tTramo">Tramo</label><select id="tTramo"><option value="0.3333">Tramo 1 · 1/3 de la caja</option><option value="0.5">Tramo 2 · la mitad</option><option value="1">Tramo 3 · todo</option></select>
+          <label for="tAct">Activo</label><select id="tAct"></select>
+          <div class="out" id="tOut"></div></div>
+        <div class="box"><h3>¿Cuánto valdría mi cartera si…?</h3>
+          <div class="wt" id="wiInputs"></div>
+          <div class="out" id="wiOut"></div></div>
+      </div>
     </section>
     <section class="card c12" data-p="dca">
       <div class="ch"><h2>Compras registradas</h2><span class="r cnt">dime tus compras y las apunto</span></div>
@@ -419,7 +457,7 @@ function render(rapido){
   // abiertas
   $("oN").textContent=ps.length;
   $("open").innerHTML=ps.length?ps.map((p,i)=>{const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1, m=p.px/p.stop-1, w=Math.max(4,Math.min(100,m/.2*100));
-    return `<tr class="click" data-i="${i}"><td><span class="pair">${base(p.s)}<small>/USDT</small></span><span class="tag">${p.tipo==="val"?"Valor":"Momentum"}</span></td>
+    return `<tr class="click" data-i="${i}"><td>${logo(p.s)}<span class="pair">${base(p.s)}<small>/USDT</small></span><span class="tag">${p.tipo==="val"?"Valor":"Momentum"}</span></td>
     <td data-l="Cantidad">${f(p.qty,4)}</td><td data-l="Entrada">${px(p.entrada)}</td><td data-l="Actual">${px(p.px)}</td><td data-l="Valor">${f(v)}</td>
     <td data-l="Beneficio" class="${cls(r)}">${pc(r)}<div class="dim" style="font-size:10.5px">${sg(v-c)} USDT</div></td>
     <td data-l="Stop">${px(p.stop)}<span class="sbar"><i style="width:${w}%;background:${m<.05?V("--down"):V("--amber")}"></i></span></td>
@@ -428,25 +466,25 @@ function render(rapido){
   document.querySelectorAll("#open tr.click").forEach(r=>r.onclick=()=>detalle(ps[r.dataset.i]));
   // cerradas
   $("cN").textContent=T.length;
-  $("closed").innerHTML=T.length?T.map(t=>`<tr><td><span class="pair">${base(t.s)}</span></td><td data-l="Entrada">${px(t.ent)}</td><td data-l="Salida">${px(t.sal)}</td>
+  $("closed").innerHTML=T.length?T.map(t=>`<tr><td>${logo(t.s)}<span class="pair">${base(t.s)}</span></td><td data-l="Entrada">${px(t.ent)}</td><td data-l="Salida">${px(t.sal)}</td>
     <td data-l="Beneficio" class="${cls(t.pct)}">${pc(t.pct)}</td><td data-l="USDT" class="${cls(t.usdt)}">${sg(t.usdt)}</td><td data-l="Duración" class="mute">${t.t0?dur(t.t1-t.t0):"—"}</td>
     <td data-l="Cierre" class="mute">${fecha(t.t1)}</td><td class="why">${t.motivo}</td></tr>`).join(""):`<tr><td colspan="8" class="empty">Todavía no hay operaciones cerradas. Aparecerán aquí con su beneficio en cuanto el bot venda.</td></tr>`;
   // por cripto
   const G={}; T.forEach(t=>{const g=G[t.s]??={n:0,w:0,u:0}; g.n++; if((t.usdt??0)>0)g.w++; g.u+=t.usdt??0;});
   const gk=Object.entries(G).sort((a,b)=>b[1].u-a[1].u);
-  $("perf").innerHTML=gk.length?gk.map(([s,g])=>`<tr><td><span class="pair">${base(s)}</span></td><td>${g.n}</td><td>${f(g.w/g.n*100,0)}%</td><td class="${cls(g.u)}">${sg(g.u)}</td></tr>`).join(""):`<tr><td colspan="4" class="empty">Sin datos todavía.</td></tr>`;
+  $("perf").innerHTML=gk.length?gk.map(([s,g])=>`<tr><td>${logo(s)}<span class="pair">${base(s)}</span></td><td>${g.n}</td><td>${f(g.w/g.n*100,0)}%</td><td class="${cls(g.u)}">${sg(g.u)}</td></tr>`).join(""):`<tr><td colspan="4" class="empty">Sin datos todavía.</td></tr>`;
   // ranking
   const uni=new Set(P.universo||[]), held=new Set(ps.map(p=>p.s));
   const rk=P.ranking.filter(r=>!uni.size||uni.has(r.s)); $("uN").textContent=rk.length+" pares";
   $("rk").innerHTML=rk.map((r,i)=>`<tr style="${i===1?"border-bottom:1px dashed "+V("--amber"):i===3?"border-bottom:1px dashed "+V("--line2"):""}">
-    <td class="dim">${i+1}</td><td style="text-align:left"><span class="pair">${base(r.s)}</span>${held.has(r.s)?'<span class="tag">En cartera</span>':''}</td>
+    <td class="dim">${i+1}</td><td style="text-align:left">${logo(r.s)}<span class="pair">${base(r.s)}</span>${held.has(r.s)?'<span class="tag">En cartera</span>':''}</td>
     <td class="${r.score==null?"dim":cls(r.score)}">${r.score==null?"—":sg(r.score)}</td>
     <td class="${r.z!=null&&r.z<-2?"up":"mute"}">${r.z==null?"—":f(r.z,2)}</td><td>${px(r.px)}</td></tr>`).join("");
   // registro
   const L=(P.log||[]).slice().reverse(); $("lN").textContent=L.length;
   const col={buy:V("--up"),sell:V("--down"),veto:V("--warn")};
   $("log").innerHTML=L.length?L.map(l=>`<tr><td class="mute">${fecha(l.t)}</td><td data-l="Lado"><span class="side" style="color:${col[l.lado]}">${({buy:"COMPRA",sell:"VENTA",veto:"VETO"})[l.lado]||l.lado}</span></td>
-    <td data-l="Par"><span class="pair">${base(l.s)}</span></td><td data-l="Precio">${px(l.px)}</td><td class="why">${l.motivo}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">Sin órdenes.</td></tr>`;
+    <td data-l="Par">${logo(l.s)}<span class="pair">${base(l.s)}</span></td><td data-l="Precio">${px(l.px)}</td><td class="why">${l.motivo}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">Sin órdenes.</td></tr>`;
   // estado
   const prox=P.proximo_rebalanceo?Math.max(0,(P.proximo_rebalanceo-Date.now()/1000)/3600):null;
   const KV=[["Modo",P.modo==="live"?"Dinero real":"Paper (simulado)"],["Exchange","KuCoin spot"],["Estrategia","Momentum top 2 + valor vs BTC"],
@@ -458,7 +496,7 @@ function render(rapido){
   { const U=(P.avisos||[]).filter(a=>a.tipo!=="resumen").slice(-3).reverse();
     $("ultAv").innerHTML=U.length?`<div class="ch"><h2>Últimos avisos</h2><span class="r cnt">ver todos ›</span></div>`+U.map(a=>{const [t1]=a.texto.split("\n"); return `<div class="av" style="cursor:pointer"><div class="tx"><b style="font-weight:600">${t1}</b></div><div class="tm">${fecha(a.t)}</div></div>`}).join(""):"";
     $("ultAv").style.display=U.length?"":"none"; $("ultAv").style.cursor="pointer"; }
-  renderDca(); renderIA(); renderAvisos(); renderInforme();
+  renderDca(); renderIA(); renderAvisos(); renderInforme(); semaforos(); herramientas();
   $("gBot").innerHTML=f(eq)+' <span style="font-size:14px;color:var(--mute)">USDT</span>';
   $("gBotS").innerHTML=`<span class="${cls(eq-ini)}">${pc(eq/ini-1)}</span> <span class="mute">desde el inicio · ${ps.length} posiciones</span>`;
   const DI=(P.diario||[]).slice().reverse();
@@ -488,18 +526,19 @@ function renderDca(){
   const zonas=(D.watch||[]).filter(w=>w.zona&&w.zona.ref).map(w=>base(w.s));
   $("gDcaS").innerHTML=zonas.length?`<span class="up">En zona de compra: ${zonas.join(", ")}</span>`:`<span class="mute">Ningún activo en zona de compra</span>`;
   $("dcaTot").textContent="Valor total "+f(tot)+" USD";
-  $("dcaPos").innerHTML=(D.posiciones||[]).length?D.posiciones.map(x=>`<tr><td><span class="pair">${base(x.s)}</span></td><td data-l="Cantidad">${f(x.cantidad,2)}</td>
+  $("dcaPos").innerHTML=(D.posiciones||[]).length?D.posiciones.map(x=>`<tr><td>${logo(x.s)}<span class="pair">${base(x.s)}</span></td><td data-l="Cantidad">${f(x.cantidad,2)}</td>
     <td data-l="Precio medio">${x.precio_medio?px(x.precio_medio):'<span class="dim">pendiente</span>'}</td><td data-l="Precio">${px(x.px)}</td><td data-l="Valor">${f(x.valor)} $</td>
     <td data-l="Resultado" class="${x.pnl_pct==null?"dim":cls(x.pnl_pct)}">${x.pnl_pct==null?"—":pc(x.pnl_pct)}</td></tr>`).join(""):`<tr><td colspan="6" class="empty">Sin compras registradas.</td></tr>`;
   $("dcaWatch").innerHTML=(D.watch||[]).map((w,i)=>{const z=w.zona||{}, e=z.ref?"t":w.estado==="En oferta"?"o":"w";
     const nv=z.niveles?`<div class="dim" style="font-size:11.5px;margin-top:4px">T1 ${px(z.niveles.t1)} · T2 ${px(z.niveles.t2)} · T3 ${px(z.niveles.t3)}</div>`:"";
-    return `<tr class="click" data-dca="${i}"><td><span class="pair">${base(w.s)}</span></td><td data-l="Precio">${px(w.px)}</td>
+    return `<tr class="click" data-dca="${i}"><td>${logo(w.s)}<span class="pair">${base(w.s)}</span></td><td data-l="Precio">${px(w.px)}</td>
     <td data-l="24h" class="${cls(w.ch24h)}">${pc(w.ch24h,1)}</td><td data-l="7d" class="${cls(w.ch7d)}">${pc(w.ch7d,1)}</td>
     <td data-l="Desde máx. 1 año" class="${w.caida_1a<-.3?"down":""}">${pc(w.caida_1a,0)}</td>
     <td data-l="Rango 3 años">${f(w.rango_3a*100,0)}%<span class="rbar"><i style="left:${Math.max(0,Math.min(100,w.rango_3a*100))}%"></i></span></td>
     <td data-l="RSI semanal" class="${w.rsi_sem<40?"up":w.rsi_sem>70?"down":""}">${f(w.rsi_sem,0)}</td>
     <td data-l="vs media 200d" class="${w.vs_ma200==null?"dim":cls(w.vs_ma200)}">${w.vs_ma200==null?"—":pc(w.vs_ma200,0)}</td>
-    <td data-l="Estado"><span class="est ${e}">${w.estado}</span>${nv}</td></tr>`}).join("");
+    <td data-l="60 días">${spark(w.velas)}</td>
+    <td data-l="Semáforo"><span class="sem-cell">${luz(semDca(w)[0])}${semDca(w)[1]}</span>${nv}</td></tr>`}).join("");
   document.querySelectorAll("#dcaWatch tr.click").forEach(r=>r.onclick=()=>dcaDetalle(D.watch[r.dataset.dca]));
   const A=D.auto;
   if(A&&A.modo!=="off"){
@@ -509,18 +548,18 @@ function renderDca(){
     $("autoStats").innerHTML=[["Aportado",f(A.aportado)+" $",""],["Caja disponible",f(A.caja)+" $","esperando caídas"],["Invertido (valor)",f(A.valor_posiciones)+" $",(A.posiciones||[]).map(x=>x.activo).join(", ")||"—"],
       ["Total",f(A.total)+" $",`<span class="${cls(r)}">${pc(r)}</span> sobre lo aportado`]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b><em>${x[2]}</em></div>`).join("");
     const AC=(A.compras||[]).slice().reverse();
-    $("autoCompras").innerHTML=AC.length?AC.map(c=>`<tr><td>${c.fecha}</td><td data-l="Activo"><span class="pair">${c.activo}</span></td><td data-l="Tramo">${c.tramo}/3</td>
+    $("autoCompras").innerHTML=AC.length?AC.map(c=>`<tr><td>${c.fecha}</td><td data-l="Activo">${logo(c.activo)}<span class="pair">${c.activo}</span></td><td data-l="Tramo">${c.tramo}/3</td>
       <td data-l="Cantidad">${f(c.cantidad,2)}</td><td data-l="Precio">${px(c.precio_usd)}</td><td data-l="Importe">${f(c.usd)} $</td></tr>`).join(""):`<tr><td colspan="6" class="empty">Sin compras todavía: el bot compra cuando un activo entra en un tramo.</td></tr>`;
   }
   const C=(D.compras||[]).slice().reverse();
-  $("dcaCompras").innerHTML=C.length?C.map(c=>`<tr><td>${c.fecha}</td><td data-l="Activo"><span class="pair">${c.activo}</span></td><td data-l="Cantidad">${f(c.cantidad,2)}</td>
+  $("dcaCompras").innerHTML=C.length?C.map(c=>`<tr><td>${c.fecha}</td><td data-l="Activo">${logo(c.activo)}<span class="pair">${c.activo}</span></td><td data-l="Cantidad">${f(c.cantidad,2)}</td>
     <td data-l="Precio (USD)">${c.precio_usd?px(c.precio_usd):'<span class="dim">—</span>'}</td><td class="why">${c.nota||""}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">Sin compras registradas.</td></tr>`;
 }
 function dcaDetalle(w){
   const z=w.zona||{}; PSEL=null; $("tfRow").style.display="none";
   $("sheetLeg").innerHTML=z.niveles?'<span><i style="background:#10B981"></i>Tramo 1</span><span><i style="background:#F59E0B"></i>Tramo 2 (−15%)</span><span><i style="background:#E5484D"></i>Tramo 3 (−28%)</span>':'<span>Velas diarias · sin zona de compra activa</span>';
   $("sheet").hidden=false;
-  $("dSym").innerHTML=`${base(w.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">DCA largo plazo</span>`;
+  $("dSym").innerHTML=`${logo(w.s)}${base(w.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">DCA largo plazo</span>`;
   $("dSub").innerHTML=`${pc(w.caida_1a,0)} desde máximo de 1 año · RSI semanal ${f(w.rsi_sem,0)} · ${w.estado}`;
   $("dDl").innerHTML=[["Precio",px(w.px)],["Tramo 1",z.niveles?px(z.niveles.t1):"—"],["Tramo 2",z.niveles?px(z.niveles.t2):"—"],["Tramo 3",z.niveles?px(z.niveles.t3):"—"],["24h",pc(w.ch24h,1)],["vs media 200d",w.vs_ma200==null?"—":pc(w.vs_ma200,0)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
   requestAnimationFrame(()=>{ const el=$("cv2"); if(CH2){CH2.remove();CH2=null;} el.innerHTML=""; if(!window.LightweightCharts||!w.velas) return;
@@ -530,6 +569,60 @@ function dcaDetalle(w){
     if(z.niveles){[["t1","tramo 1","#10B981"],["t2","tramo 2","#F59E0B"],["t3","tramo 3","#E5484D"]].forEach(([k,t,c])=>cs.createPriceLine({price:z.niveles[k],color:c,lineStyle:2,lineWidth:1,axisLabelVisible:true,title:t}));}
     CH2.timeScale().fitContent(); $("tfInfo").textContent="1 vela = 1 día · datos del bot"; });
 }
+const LOGO_COL=["#2F6BFF","#10B981","#8B5CF6","#F59E0B","#06B6D4","#E5484D","#0EA5E9","#14B8A6"];
+function logo(s,size){ const b=base(s||"").replace(/[^A-Za-z0-9]/g,""); if(!b) return "";
+  const c=LOGO_COL[[...b].reduce((a,ch)=>a+ch.charCodeAt(0),0)%LOGO_COL.length];
+  const fb=`<span class=&quot;lg f&quot; style=&quot;background:${c}&quot;>${b.slice(0,3)}</span>`;
+  return `<img class="lg" alt="" loading="lazy" src="https://assets.coincap.io/assets/icons/${b.toLowerCase()}@2x.png" onerror="this.outerHTML='${fb.replace(/&quot;/g,'\\&quot;')}'">`;
+}
+function luz(c){return `<span class="luz ${c}"></span>`}
+let FNG=null;
+async function cargarFNG(){ try{ const r=await fetch("https://api.alternative.me/fng/?limit=2"); const j=await r.json(); FNG=j.data; if(P) semaforos(); }catch(e){} }
+function semaforos(){
+  const ps=P.posiciones||[], D=P.dca||{}, edad=(Date.now()/1000-P.t)/60;
+  const dist=P.btc/P.sma-1;
+  const merc=P.regimen?(dist<0.03?["a","Alcista justo","BTC solo "+pc(dist,1)+" sobre su media"]:["g","Alcista","BTC "+pc(dist,0)+" sobre su media de 100d"]):["r","Bajista","Bot en USDT, protegido"];
+  let sent=["n","—","cargando índice"];
+  if(FNG){const v=+FNG[0].value; sent=[v<25?"r":v<45?"a":v<=75?"g":"a", v+" · "+({"Extreme Fear":"Miedo extremo","Fear":"Miedo","Neutral":"Neutral","Greed":"Codicia","Extreme Greed":"Euforia"}[FNG[0].value_classification]||FNG[0].value_classification), v<25?"Pánico: suele ser oportunidad DCA":v>75?"Euforia: prudencia":"Fear & Greed Index"];}
+  const marg=ps.length?Math.min(...ps.map(p=>p.px/p.stop-1)):null;
+  const ries=marg==null?["n","Sin posiciones","Todo en liquidez"]:[marg>0.10?"g":marg>0.05?"a":"r",pc(marg,1)+" al stop","la posición más cercana"];
+  const zon=(D.watch||[]).filter(w=>w.zona&&w.zona.ref), ofe=(D.watch||[]).filter(w=>w.estado==="En oferta");
+  const opo=zon.length?["g",zon.length+" en zona",zon.map(w=>base(w.s)).join(", ")]:ofe.length?["a","Vigilando",ofe.map(w=>base(w.s)).join(", ")]:["n","Sin caídas","esperando oportunidades"];
+  const sis=edad<45?["g","Funcionando","último ciclo hace "+Math.round(edad)+" min"]:edad<120?["a","Con retraso","hace "+Math.round(edad)+" min"]:["r","Parado","sin ciclo hace "+(edad/60).toFixed(1)+" h"];
+  const rf=P.research&&P.research.fecha, hoy=new Date().toISOString().slice(0,10), ay=new Date(Date.now()-864e5).toISOString().slice(0,10);
+  const ana=rf?(rf>=ay?["g","Al día","análisis del "+rf]:["a","Atrasado","último: "+rf]):["n","Pendiente","primer análisis esta noche"];
+  const L=[["Mercado",merc],["Sentimiento",sent],["Riesgo posiciones",ries],["Oportunidades DCA",opo],["Sistema",sis],["Analista IA",ana]];
+  $("sem").innerHTML=L.map(([t,[c,v,d]])=>`<div class="sl"><div class="h">${luz(c)}${t}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
+}
+function spark(v){ if(!v||v.length<2) return ""; const c=v.slice(-60).map(k=>k[4]), mn=Math.min(...c), mx=Math.max(...c), W=110,H=30;
+  const pts=c.map((y,i)=>`${(i/(c.length-1)*W).toFixed(1)},${(H-2-(y-mn)/(mx-mn||1)*(H-4)).toFixed(1)}`).join(" ");
+  const col=c.at(-1)>=c[0]?"#10B981":"#E5484D";
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}"><polyline fill="none" stroke="${col}" stroke-width="1.6" points="${pts}"/></svg>`; }
+let toolInit=false;
+function herramientas(){
+  const D=P.dca; if(!D) return; const W=D.watch||[];
+  if(!toolInit){ toolInit=true;
+    $("tCaja").value=Math.round((D.auto&&D.auto.caja)||324);
+    $("tAct").innerHTML=W.map(w=>`<option value="${w.s}">${base(w.s)}</option>`).join("");
+    const pos=Object.fromEntries((D.posiciones||[]).map(x=>[x.s,x.cantidad]));
+    (D.auto&&D.auto.posiciones||[]).forEach(x=>{const k=x.activo+"/USDT"; pos[k]=(pos[k]||0)+x.cantidad;});
+    $("wiInputs").innerHTML=Object.entries(pos).map(([k,q])=>`${logo(k)}<span><b>${base(k)}</b> <span class="dim" style="font-size:12px">${f(q,2)} uds</span></span><input id="wi_${base(k)}" data-q="${q}" data-s="${k}" type="number" step="any" style="width:110px" aria-label="Precio objetivo de ${base(k)}">`).join("")||'<span class="mute">Sin posiciones DCA todavía.</span>';
+    ["tCaja","tTramo","tAct"].forEach(i=>$(i).oninput=calcTramo);
+    document.querySelectorAll("#wiInputs input").forEach(i=>{ const w=W.find(x=>x.s===i.dataset.s); i.value=w?+(w.px*2).toPrecision(4):""; i.oninput=calcWI; });
+  }
+  calcTramo(); calcWI();
+}
+function calcTramo(){ const D=P.dca, w=(D.watch||[]).find(x=>x.s===$("tAct").value); const usd=(+$("tCaja").value||0)*(+$("tTramo").value);
+  if(!w){$("tOut").textContent="";return;}
+  $("tOut").innerHTML=`Comprarías <b>${f(usd)} $</b><br>≈ ${f(usd*0.9985/w.px,2)} ${base(w.s)} a ${px(w.px)} $<br><span class="mute">Semáforo: ${semDca(w)[1]}</span>`; }
+function calcWI(){ let hoy=0, obj=0; const W=P.dca.watch||[];
+  document.querySelectorAll("#wiInputs input").forEach(i=>{ const q=+i.dataset.q, w=W.find(x=>x.s===i.dataset.s); hoy+=q*(w?w.px:0); obj+=q*(+i.value||0); });
+  $("wiOut").innerHTML=`Hoy: <b>${f(hoy)} $</b><br>Con esos precios: <b class="${cls(obj-hoy)}">${f(obj)} $</b> <span class="${cls(obj-hoy)}">(${pc(hoy?obj/hoy-1:0,0)})</span><br><span class="dim" style="font-size:12px">Por defecto, el doble del precio actual. Cámbialo a tu objetivo.</span>`; }
+function semDca(w){ const z=w.zona||{};
+  if(z.ref) return ["g","Comprar · tramo "+z.tramo];
+  if(w.estado==="En oferta"||w.rsi_sem<45||w.caida_1a<-0.25) return ["a","Vigilar"];
+  if(w.rsi_sem>65||(w.vs_ma200||0)>0.3) return ["r","Caro"];
+  return ["n","Neutral"]; }
 let FA="todos", FN="mias";
 function visto(){ try{return +localStorage.getItem("avisos_visto")||0}catch(e){return 0} }
 function renderAvisos(){
@@ -558,7 +651,7 @@ function renderIA(){
   const v=x=>({alcista:"al",bajista:"ba"})[x]||"ne";
   const best=(R.mejor_corto||R.mejor_largo)?`<div class="best"><div><div class="mute" style="font-size:12px;font-weight:600">Mejor oportunidad a corto plazo</div><div style="font-size:18px;font-weight:700;margin:4px 0">${R.mejor_corto?.activo||"—"}</div><div class="mute" style="font-size:13px">${R.mejor_corto?.motivo||""}</div></div>
     <div><div class="mute" style="font-size:12px;font-weight:600">Mejor proyecto a largo plazo</div><div style="font-size:18px;font-weight:700;margin:4px 0">${R.mejor_largo?.activo||"—"}</div><div class="mute" style="font-size:13px">${R.mejor_largo?.motivo||""}</div></div></div>`:"";
-  $("res").innerHTML=(R.mercado?`<div class="con" style="max-height:none;color:var(--fg)">${R.mercado}</div>`:"")+best+Object.entries(R.activos).map(([s,a])=>`<div class="ra"><h3>${base(s)}
+  $("res").innerHTML=(R.mercado?`<div class="con" style="max-height:none;color:var(--fg)">${R.mercado}</div>`:"")+best+Object.entries(R.activos).map(([s,a])=>`<div class="ra"><h3>${logo(s)}${base(s)}
     ${a.corto?`<span class="vis ${v(a.corto.vision)}">corto: ${a.corto.vision}</span>`:""}${a.largo?`<span class="vis ${v(a.largo.vision)}">largo: ${a.largo.vision}</span>`:""}</h3>
     <div class="hz"><div><b>Corto plazo.</b> ${a.corto?.tesis||"—"}</div><div><b>Largo plazo.</b> ${a.largo?.tesis||"—"}</div></div>
     ${a.invalidacion?`<div class="mute" style="font-size:12.5px;margin-top:8px"><b style="color:var(--fg)">Qué lo invalidaría:</b> ${a.invalidacion}</div>`:""}
@@ -601,7 +694,7 @@ function diario(){
 }
 function detalle(p){
   $("sheet").hidden=false; const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1;
-  $("dSym").innerHTML=`${base(p.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">${p.tipo==="val"?"Valor":"Momentum"}</span>`;
+  $("dSym").innerHTML=`${logo(p.s)}${base(p.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">${p.tipo==="val"?"Valor":"Momentum"}</span>`;
   $("dSub").innerHTML=`<span class="${cls(r)}">${pc(r)} · ${sg(v-c)} USDT</span> · valor ${f(v)} USDT`;
   $("dDl").innerHTML=[["Entrada",px(p.entrada)],["Actual",px(p.px)],["Stop",`<b class="down" style="font-weight:500">${px(p.stop)}</b>`],["Máximo",px(p.max)],["Cantidad",f(p.qty,4)],["Margen al stop",pc(p.px/p.stop-1,1)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
   requestAnimationFrame(()=>velas(p));
@@ -649,7 +742,7 @@ function cinta(){
   const lista=[...new Set(["BTC/USDT","ETH/USDT",...(P.posiciones||[]).map(p=>p.s),...(P.ranking||[]).slice(0,8).map(r=>r.s)])];
   $("tape").innerHTML=lista.map(s=>{const v=vivo[s], r=(P.ranking||[]).find(x=>x.s===s); const pxv=v?v.px:r?.px; if(pxv==null)return"";
     const ch=v&&v.o?v.px/v.o-1:null;
-    return `<span class="tk ${hold.has(s)?"hold":""}"><b>${base(s)}</b><span class="${v&&v.dir>0?"flash-up":v&&v.dir<0?"flash-down":""}">${px(pxv)}</span>${ch==null?"":`<i class="${cls(ch)}">${pc(ch)}</i>`}</span>`}).join("");
+    return `<span class="tk ${hold.has(s)?"hold":""}">${logo(s)}<b>${base(s)}</b><span class="${v&&v.dir>0?"flash-up":v&&v.dir<0?"flash-down":""}">${px(pxv)}</span>${ch==null?"":`<i class="${cls(ch)}">${pc(ch)}</i>`}</span>`}).join("");
 }
 function aplicarVivo(){
   if(!P) return; let n=0;
@@ -676,7 +769,7 @@ addEventListener("resize",()=>{if(P){diario();}});
 function cuenta(){const n=new Date(), next=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1,0,7), d=Math.max(0,next-n.getTime())/1000;
   $("cd").textContent=String(Math.floor(d/3600)).padStart(2,"0")+":"+String(Math.floor(d%3600/60)).padStart(2,"0")+":"+String(Math.floor(d%60)).padStart(2,"0");}
 setInterval(cuenta,1000); cuenta();
-cargar(); setInterval(cargar,60000);
+cargar(); setInterval(cargar,60000); cargarFNG(); setInterval(cargarFNG,3600000);
 </script>
 </body>
 </html>
