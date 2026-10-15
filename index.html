@@ -243,7 +243,7 @@ let P=null, rango=0, T=null;
 
 async function cargar(){
   try{const r=await fetch("panel.json?"+Date.now(),{cache:"no-store"}); if(!r.ok)throw new Error("HTTP "+r.status);
-    P=await r.json(); $("err").hidden=true; T=trades(P); render();}
+    P=await r.json(); $("err").hidden=true; T=trades(P); conectarVivo(); aplicarVivo(); render();}
   catch(e){$("err").hidden=false; $("err").textContent="No se pudieron cargar los datos ("+e.message+"). Reintento en 1 minuto.";}
 }
 
@@ -260,11 +260,13 @@ function trades(P){
   return cerradas.reverse();
 }
 
-function render(){
+function render(rapido){
+  ultimoRender=Date.now();
   const ini=P.capital_inicial, eq=P.equity, H=P.historial||[], ps=P.posiciones||[];
   // barra
   const edad=(Date.now()/1000-P.t)/60;
-  $("st").innerHTML=`<span class="dot ${edad>90?"old":""}"></span>${edad<90?"Activo · hace "+Math.round(edad)+" min":"Último ciclo hace "+(edad/60).toFixed(1)+" h"}`;
+  $("st").innerHTML=`<span class="dot ${edad>90?"old":""}"></span>${edad<90?"Bot activo · ciclo hace "+Math.round(edad)+" min":"Último ciclo hace "+(edad/60).toFixed(1)+" h"}`+
+    (P._vivo?` · <span style="color:var(--up)">● precios en vivo</span>`:"");
   $("pMode").textContent=({paper:"PAPER",live:"REAL",detenido:"DETENIDO"})[P.modo]||P.modo; $("pMode").className="pill "+(P.modo==="live"?"live":"paper");
   $("pReg").textContent=P.regimen?"MERCADO ALCISTA":"MERCADO BAJISTA"; $("pReg").className="pill "+(P.regimen?"bull":"bear");
   // cifras
@@ -288,7 +290,7 @@ function render(){
     ["Peor operación",worst?`<span class="down">${pc(worst.pct,1)}</span>`:"—",worst?base(worst.s):"—"],
     ["Caída máxima",`<span class="${dd<-.2?"down":""}">${pc(dd,1)}</span>`,"desde el máximo"]];
   $("stats").innerHTML=S.map(s=>`<div class="stat"><span>${s[0]}</span><b>${s[1]}</b><em>${s[2]}</em></div>`).join("");
-  curva(); diario();
+  if(!rapido){ curva(); diario(); }
   // abiertas
   $("oN").textContent=ps.length;
   $("open").innerHTML=ps.length?ps.map((p,i)=>{const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1, m=p.px/p.stop-1, w=Math.max(4,Math.min(100,m/.2*100));
@@ -390,6 +392,24 @@ function velas(p){
     g.fillStyle="#140c03"; g.textAlign="left"; g.textBaseline="middle"; g.font="600 10px "+V("--mono"); g.fillText(px(v),W-R+5,Y(v));});
   g.fillStyle=V("--dim"); g.font="10px "+V("--mono"); g.textAlign="center"; g.textBaseline="top";
   [0,Math.floor(n/2),n-1].forEach(i=>g.fillText(new Date(K[i][0]*1000).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}),Math.min(Math.max(L+i*cw+cw/2,24),W-R-24),Hh-B+6));
+}
+
+/* ---------- precios en tiempo real (flujo público de Binance) ---------- */
+let ws=null, wsKey="", vivo={}, ultimoRender=0, pend=false;
+function conectarVivo(){
+  const syms=[...new Set([...(P.posiciones||[]).map(p=>p.s),"BTC/USDT"])].map(s=>s.replace("/","").toLowerCase());
+  const key=syms.sort().join(","); if(key===wsKey&&ws&&ws.readyState<2) return;
+  wsKey=key; try{ws&&ws.close()}catch(e){}
+  try{ ws=new WebSocket("wss://data-stream.binance.vision/stream?streams="+syms.map(s=>s+"@miniTicker").join("/")); }catch(e){ return; }
+  ws.onmessage=ev=>{ const d=JSON.parse(ev.data).data; if(!d||!d.s) return;
+    vivo[d.s.replace(/USDT$/,"/USDT")]={px:+d.c, t:Date.now()};
+    if(!pend){ pend=true; setTimeout(()=>{ pend=false; aplicarVivo(); render(true); }, Math.max(0,1000-(Date.now()-ultimoRender))); } };
+  ws.onclose=()=>{ setTimeout(()=>{ if(P){ wsKey=""; conectarVivo(); } }, 5000); };
+}
+function aplicarVivo(){
+  if(!P) return; let n=0;
+  (P.posiciones||[]).forEach(p=>{ const v=vivo[p.s]; if(v&&Date.now()-v.t<120000){ p.px=v.px; p.max=Math.max(p.max,v.px); n++; } });
+  if(n){ P.equity=P.cash+(P.posiciones||[]).reduce((a,p)=>a+p.qty*p.px,0); P._vivo=true; }
 }
 
 $("close").onclick=()=>$("sheet").hidden=true;
