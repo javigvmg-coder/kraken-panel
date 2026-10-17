@@ -501,7 +501,7 @@ function render(rapido){
   // abiertas
   $("oN").textContent=ps.length;
   $("open").innerHTML=ps.length?ps.map((p,i)=>{const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1, m=p.px/p.stop-1, w=Math.max(4,Math.min(100,m/.2*100));
-    return `<tr class="click" data-i="${i}"><td>${logo(p.s)}<span class="pair">${base(p.s)}<small>/USDT</small></span><span class="tag">${p.tipo==="val"?"Valor":"Momentum"}</span></td>
+    return `<tr class="click" data-i="${i}"><td>${logo(p.s)}<span class="pair">${base(p.s)}<small>/USDT</small></span><span class="tag">${p.tipo==="val"?"Valor":p.tipo==="core"?"Núcleo BTC":"Momentum"}</span></td>
     <td data-l="Cantidad">${f(p.qty,4)}</td><td data-l="Entrada">${px(p.entrada)}</td><td data-l="Actual">${px(p.px)}</td><td data-l="Valor">${f(v)}</td>
     <td data-l="Beneficio" class="${cls(r)}">${pc(r)}<div class="dim" style="font-size:10.5px">${sg(v-c)} USDT</div></td>
     <td data-l="Stop">${px(p.stop)}<span class="sbar"><i style="width:${w}%;background:${m<.05?V("--down"):V("--amber")}"></i></span></td>
@@ -739,7 +739,7 @@ function diario(){
 }
 function detalle(p){
   $("sheet").hidden=false; favPintar(p.s); const v=p.qty*p.px, c=p.coste??p.qty*p.entrada, r=v/c-1;
-  $("dSym").innerHTML=`${logo(p.s)}${base(p.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">${p.tipo==="val"?"Valor":"Momentum"}</span>`;
+  $("dSym").innerHTML=`${logo(p.s)}${base(p.s)}<span class="dim" style="font-size:13px">/USDT</span> <span class="tag">${p.tipo==="val"?"Valor":p.tipo==="core"?"Núcleo BTC":"Momentum"}</span>`;
   $("dSub").innerHTML=`<span class="${cls(r)}">${pc(r)} · ${sg(v-c)} USDT</span> · valor ${f(v)} USDT`;
   $("dDl").innerHTML=[["Entrada",px(p.entrada)],["Actual",px(p.px)],["Stop",`<b class="down" style="font-weight:500">${px(p.stop)}</b>`],["Máximo",px(p.max)],["Cantidad",f(p.qty,4)],["Margen al stop",pc(p.px/p.stop-1,1)]].map(x=>`<div><span>${x[0]}</span>${x[1]}</div>`).join("");
   requestAnimationFrame(()=>velas(p));
