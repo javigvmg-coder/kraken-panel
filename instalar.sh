@@ -14,8 +14,14 @@ set -euo pipefail
 echo "== Token de GitHub =="
 echo "Crea uno en github.com > Settings > Developer settings > Fine-grained tokens"
 echo "con acceso SOLO al repositorio kraken-bot y permiso 'Contents: Read and write'."
-read -rsp "Pega el token (no se verá): " GH_TOKEN; echo
 REPO="javigvmg-coder/kraken-bot"
+command -v git >/dev/null || (apt-get update -qq && apt-get install -y -qq git >/dev/null)
+while true; do
+  read -rsp "Pega el token (no se verá) y pulsa Enter: " GH_TOKEN; echo
+  GH_TOKEN="$(echo -n "$GH_TOKEN" | tr -d '[:space:]')"
+  if git ls-remote "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" >/dev/null 2>&1; then echo "Token correcto."; break; fi
+  echo "Ese token no da acceso a ${REPO}. Revisa que tenga el repositorio kraken-bot y 'Contents: Read and write', y vuelve a pegarlo."
+done
 DIR=/opt/kraken-bot
 
 echo "== Memoria de reserva (swap 2 GB, para servidores de 1 GB) =="
@@ -29,7 +35,7 @@ timedatectl set-timezone Europe/Madrid
 
 echo "== Código =="
 useradd -r -m -d /home/kraken kraken 2>/dev/null || true
-git clone -q "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "$DIR" 2>/dev/null || (cd "$DIR" && git pull -q)
+if [ -d "$DIR/.git" ]; then git -C "$DIR" pull -q; else git clone -q "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "$DIR"; fi
 python3 -m venv "$DIR/.venv"
 "$DIR/.venv/bin/pip" install -q -r "$DIR/requirements.txt"
 mkdir -p "$DIR/medicion" "$DIR/real"
